@@ -65,7 +65,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: ./frp # Dockerfile 所在的目录（请确保你的目录叫 frp）
-          file: ./frp/frpc.Dockerfile # Dockerfile 的具体路径
+          file: ./frp/Frpc.Dockerfile # Dockerfile 的具体路径
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           platforms: linux/amd64,linux/arm64 # 同时构建电脑版和树莓派/Mac版
