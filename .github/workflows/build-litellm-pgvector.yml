@@ -1,0 +1,82 @@
+name: Build LiteLLM-PGVector (Custom Dockerfile)
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_tag:
+        description: "设定镜像 Tag"
+        required: false
+        default: "latest"
+        type: string
+
+  # 当你修改了自己的 Dockerfile 时触发
+  push:
+    paths:
+      - "litellm-pgvector/Litellm-pgvector.Dockerfile"
+      - ".github/workflows/build-litellm-pgvector.yml"
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository_owner }}/litellm-pgvector
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      # 1. 拉取你自己的仓库 (包含 Dockerfile)
+      # 默认会拉取到当前工作目录的根目录
+      - name: Checkout YOUR repository
+        uses: actions/checkout@v4
+
+      # 2. 拉取对方的代码 (作为构建上下文)
+      # 将代码下载到 'upstream-src' 文件夹，避免覆盖你的文件
+      - name: Checkout UPSTREAM code
+        uses: actions/checkout@v4
+        with:
+          repository: "BerriAI/litellm-pgvector"
+          ref: "main"
+          path: "upstream-src"
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=${{ inputs.version_tag }},enable=${{ github.event_name == 'workflow_dispatch' }}
+            type=raw,value=latest,enable=${{ github.event_name != 'workflow_dispatch' }}
+
+      # 3. 关键步骤：组合构建
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          # context: 告诉 Docker "源码环境"在哪里
+          # 这里指向下载下来的对方代码目录，这样 Dockerfile 里的 "COPY ." 才会复制对方的代码
+          context: ./upstream-src
+
+          # file: 告诉 Docker "Dockerfile"在哪里
+          # 这里指向你仓库里的文件路径
+          file: ./litellm-pgvector/Litellm-pgvector.Dockerfile
+
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          platforms: linux/amd64,linux/arm64
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
