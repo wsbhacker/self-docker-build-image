@@ -15,14 +15,12 @@ on:
     branches:
       - main # 或者 master，根据你的主分支名字修改
     paths:
-      - "anki/**" # 只有当 frp 文件夹内的文件发生变化时才触发
+      - "anki/**"
       - ".github/workflows/build-anki.yml" # 或者是修改了这个流水线文件本身
 
 env:
   REGISTRY: ghcr.io
-  # 镜像名称，这里会自动设置为 "ghcr.io/你的用户名/frp"
-  # 也可以手动指定，例如: image_name: my-name/my-frp
-  IMAGE_NAME: ${{ github.repository_owner }}/frps
+  IMAGE_NAME: ${{ github.repository_owner }}/ankis
 
 jobs:
   build-and-push:
@@ -64,7 +62,7 @@ jobs:
       - name: Build and push (构建并推送)
         uses: docker/build-push-action@v5
         with:
-          context: ./anki # Dockerfile 所在的目录（请确保你的目录叫 frp）
+          context: ./anki # Dockerfile 所在的目录
           file: ./anki/Ankis.Dockerfile # Dockerfile 的具体路径
           push: true
           tags: ${{ steps.meta.outputs.tags }}
