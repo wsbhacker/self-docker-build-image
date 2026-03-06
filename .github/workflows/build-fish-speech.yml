@@ -1,0 +1,82 @@
+name: Build Fish Speech Image
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_tag:
+        description: "设定镜像 Tag (例如: v1.0.0 或 latest)"
+        required: false
+        default: "latest"
+        type: string
+
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/build-fish-speech.yml"
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository_owner }}/fish-speech
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: write
+
+    strategy:
+      matrix:
+        target:
+          - webui
+          - server
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Clone fish-speech
+        run: |
+          git clone https://github.com/fishaudio/fish-speech.git
+          cd fish-speech
+          git submodule update --init --recursive
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Extract metadata (生成镜像 tag)
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-${{ matrix.target }}
+          tags: |
+            type=raw,value=${{ inputs.version_tag }},enable=${{ github.event_name == 'workflow_dispatch' }}
+            type=raw,value=latest,enable=${{ github.event_name == 'push' }}
+
+      - name: Build and push image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./fish-speech
+          file: ./fish-speech/docker/Dockerfile
+          target: ${{ matrix.target }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          platforms: linux/amd64,linux/arm64
+          build-args: |
+            BACKEND=cuda
+            CUDA_VER=12.9.0
+            UV_EXTRA=cu129
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
