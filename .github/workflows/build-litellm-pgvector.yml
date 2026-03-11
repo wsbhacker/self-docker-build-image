@@ -65,7 +65,7 @@ jobs:
 
       # 3. 关键步骤：组合构建
       - name: Build and push
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v7
         with:
           # context: 告诉 Docker "源码环境"在哪里
           # 这里指向下载下来的对方代码目录，这样 Dockerfile 里的 "COPY ." 才会复制对方的代码
