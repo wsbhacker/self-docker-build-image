@@ -1,0 +1,8 @@
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/" # workflow 文件所在目录
+    schedule:
+      interval: "weekly" # 每周检查一次
+    commit-message:
+      prefix: "chore" # PR commit 前缀
