@@ -33,7 +33,7 @@ jobs:
 
     steps:
       - name: Checkout repository (拉取代码)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Log in to the Container registry (登录镜像仓库)
         uses: docker/login-action@v3
