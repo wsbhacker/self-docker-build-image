@@ -43,7 +43,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }} # GitHub 自动生成的令牌，无需手动设置
 
       - name: Set up QEMU (配置多架构支持环境)
-        uses: docker/setup-qemu-action@v3
+        uses: docker/setup-qemu-action@v4
 
       - name: Set up Docker Buildx (配置构建工具)
         uses: docker/setup-buildx-action@v4
