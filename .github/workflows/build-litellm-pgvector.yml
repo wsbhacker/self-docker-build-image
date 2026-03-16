@@ -30,12 +30,12 @@ jobs:
       # 1. 拉取你自己的仓库 (包含 Dockerfile)
       # 默认会拉取到当前工作目录的根目录
       - name: Checkout YOUR repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       # 2. 拉取对方的代码 (作为构建上下文)
       # 将代码下载到 'upstream-src' 文件夹，避免覆盖你的文件
       - name: Checkout UPSTREAM code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: "BerriAI/litellm-pgvector"
           ref: "main"
