@@ -60,7 +60,7 @@ jobs:
             type=raw,value=latest,enable=${{ github.event_name == 'push' }}
 
       - name: Build and push (构建并推送)
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v7
         with:
           context: ./anki # Dockerfile 所在的目录
           file: ./anki/Ankis.Dockerfile # Dockerfile 的具体路径

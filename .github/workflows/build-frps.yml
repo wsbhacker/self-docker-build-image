@@ -62,7 +62,7 @@ jobs:
             type=raw,value=latest,enable=${{ github.event_name == 'push' }}
 
       - name: Build and push (构建并推送)
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v7
         with:
           context: ./frp # Dockerfile 所在的目录（请确保你的目录叫 frp）
           file: ./frp/Frps.Dockerfile # Dockerfile 的具体路径
