@@ -12,6 +12,7 @@
 | `litellm-pgvector/` | `ghcr.io/{owner}/litellm-pgvector` | LiteLLM 与 PGVector 支持 |
 | `text-embeddings-inference/` | (手动构建) | 文本嵌入推理，支持 CUDA Blackwell (Rust) |
 | `fish-speech/` | `ghcr.io/{owner}/fish-speech-webui`, `ghcr.io/{owner}/fish-speech-server` | Fish Speech TTS (从上游仓库构建) |
+| `cosyvoice/` | `ghcr.io/{owner}/cosyvoice` | CosyVoice TTS，支持 CUDA Blackwell (从上游仓库构建) |
 
 
 ## CI/CD 工作流
@@ -33,6 +34,7 @@
 - `.github/workflows/build-frps.yml` - FRP 服务端
 - `.github/workflows/build-litellm-pgvector.yml` - LiteLLM PGVector
 - `.github/workflows/build-fish-speech.yml` - Fish Speech (webui + server)
+- `.github/workflows/build-cosyvoice.yml` - CosyVoice TTS
 
 ### 工作流模式
 
