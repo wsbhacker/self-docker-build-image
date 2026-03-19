@@ -1,4 +1,4 @@
-name: Build CosyVoice
+name: Build Fullstack Dev Image
 
 on:
   workflow_dispatch:
@@ -8,15 +8,26 @@ on:
         required: false
         default: "latest"
         type: string
+      image_name:
+        description: "镜像名称 (例如: fullstack, dev, jdk11-dev)"
+        required: false
+        default: "fullstack"
+        type: string
+      jdk_version:
+        description: "JDK 版本 (例如: 8, 11, 17, 21)"
+        required: false
+        default: "8"
+        type: string
+
   push:
-    branches: [main]
+    branches:
+      - main
     paths:
-      - "cosyvoice/**"
-      - ".github/workflows/build-cosyvoice.yml"
+      - "fullstack-image/**"
+      - ".github/workflows/build-fullstack.yml"
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository_owner }}/cosyvoice
 
 jobs:
   build-and-push:
@@ -26,10 +37,10 @@ jobs:
       packages: write
 
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v6
 
-      - name: Login to GitHub Container Registry
+      - name: Log in to GHCR
         uses: docker/login-action@v4
         with:
           registry: ${{ env.REGISTRY }}
@@ -46,19 +57,20 @@ jobs:
         id: meta
         uses: docker/metadata-action@v6
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ github.event_name == 'workflow_dispatch' && inputs.image_name || 'fullstack' }}
           tags: |
-            type=raw,value=${{ inputs.version_tag }},enable=${{ github.event_name == 'workflow_dispatch' }}
+            type=raw,value=${{ github.event_name == 'workflow_dispatch' && inputs.version_tag || 'latest' }},enable=${{ github.event_name == 'workflow_dispatch' }}
             type=raw,value=latest,enable=${{ github.event_name == 'push' }}
 
-      - name: Build and push
+      - name: Build and push image
         uses: docker/build-push-action@v7
         with:
-          context: ./cosyvoice
-          file: ./cosyvoice/Cosyvoice.Dockerfile
-          platforms: linux/amd64
+          context: ./fullstack-image
+          file: ./fullstack-image/fullstack.Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          platforms: linux/amd64
+          build-args: |
+            JDK_VERSION=${{ github.event_name == 'workflow_dispatch' && inputs.jdk_version || '8' }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
