@@ -2,15 +2,23 @@ FROM nvidia/cuda:12.9.0-devel-ubuntu24.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install system dependencies (Python 3.12 included in Ubuntu 24.04)
+# Install system dependencies and Python 3.10
 RUN apt-get update && apt-get install -y \
-    python3 python3-venv \
+    software-properties-common \
     git git-lfs unzip g++ curl \
+    && add-apt-repository -y ppa:deadsnakes/ppa \
+    && apt-get update && apt-get install -y \
+    python3.10 python3.10-venv python3.10-dev \
     && rm -rf /var/lib/apt/lists/*
+
+# Use Python 3.10 as default
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.10 1
 
 # Install uv (fast Python package manager)
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh
 ENV PATH="/root/.local/bin:$PATH"
+# Ensure uv uses Python 3.10
+ENV UV_PYTHON=/usr/bin/python3.10
 
 WORKDIR /opt/CosyVoice
 
@@ -18,10 +26,10 @@ WORKDIR /opt/CosyVoice
 RUN git lfs install && \
     git clone --recursive https://github.com/FunAudioLLM/CosyVoice.git .
 
-# Install PyTorch with CUDA 12.9 (compatible with Blackwell)
+# Install PyTorch with CUDA 12.9 using direct wheel URLs (cp310 for cu129)
 RUN uv pip install --system \
-    torch==2.8.0 torchaudio==2.8.0 \
-    --find-links https://download.pytorch.org/whl/cu129/torch_stable.html
+    https://download.pytorch.org/whl/cu129/torch-2.8.0%2Bcu129-cp310-cp310-linux_x86_64.whl \
+    https://download.pytorch.org/whl/cu129/torchaudio-2.8.0%2Bcu129-cp310-cp310-linux_x86_64.whl
 
 # Install other dependencies (exclude torch/torchaudio and old extra-index-url to prevent downgrade)
 RUN grep -vE '^torch==|^torchaudio==|^--extra-index-url' requirements.txt > requirements_filtered.txt && \
@@ -44,7 +52,7 @@ MODEL_PATH="${MODEL_ROOT}"\n\
 if [ -n "${MODEL_NAME}" ]; then\n\
     MODEL_PATH="${MODEL_ROOT}/${MODEL_NAME}"\n\
 fi\n\
-exec python3 webui.py --port 50000 --model_dir "${MODEL_PATH}" "$@"\n' \
+exec python3.10 webui.py --port 50000 --model_dir "${MODEL_PATH}" "$@"\n' \
     > /entrypoint.sh && chmod +x /entrypoint.sh
 
 # Default entrypoint - webui
