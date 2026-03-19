@@ -1,4 +1,4 @@
-FROM nvidia/cuda:13.2.0-devel-ubuntu24.04
+FROM nvidia/cuda:12.9.0-devel-ubuntu24.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -18,13 +18,16 @@ WORKDIR /opt/CosyVoice
 RUN git lfs install && \
     git clone --recursive https://github.com/FunAudioLLM/CosyVoice.git .
 
-# Install PyTorch with CUDA 13.0 (native support for Blackwell)
-# Debug: test index access
-RUN set -x && \
-    curl -sL "https://download.pytorch.org/whl/cu130/torch/" | grep -o 'torch-2\.10\.0[^"]*cu130[^"]*x86_64\.whl' | head -5 && \
+# Install PyTorch with CUDA 12.9 (compatible with Blackwell)
+RUN set -ex && \
+    echo "=== Python version ===" && \
+    python3 --version && \
+    echo "=== uv version ===" && \
+    uv --version && \
+    echo "=== Installing PyTorch ===" && \
     uv pip install --system \
-    torch==2.10.0+cu130 torchaudio==2.10.0+cu130 \
-    --default-index https://download.pytorch.org/whl/cu130
+    torch==2.8.0 torchaudio==2.8.0 \
+    --index https://download.pytorch.org/whl/cu129
 
 # Install other dependencies (exclude torch/torchaudio and old extra-index-url to prevent downgrade)
 RUN grep -vE '^torch==|^torchaudio==|^--extra-index-url' requirements.txt > requirements_filtered.txt && \
