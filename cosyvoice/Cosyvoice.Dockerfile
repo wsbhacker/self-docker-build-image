@@ -28,8 +28,10 @@ RUN git lfs install && \
 
 # Download and install PyTorch with CUDA 12.9 (cp310 for cu129)
 RUN mkdir -p /tmp/wheels && cd /tmp/wheels && \
-    curl -LO https://download.pytorch.org/whl/cu129/torch-2.8.0%2Bcu129-cp310-cp310-linux_x86_64.whl && \
-    curl -LO https://download.pytorch.org/whl/cu129/torchaudio-2.8.0%2Bcu129-cp310-cp310-linux_x86_64.whl && \
+    curl -fL -o torch-2.8.0+cu129-cp310-cp310-linux_x86_64.whl \
+        "https://download.pytorch.org/whl/cu129/torch-2.8.0%2Bcu129-cp310-cp310-linux_x86_64.whl" && \
+    curl -fL -o torchaudio-2.8.0+cu129-cp310-cp310-linux_x86_64.whl \
+        "https://download.pytorch.org/whl/cu129/torchaudio-2.8.0%2Bcu129-cp310-cp310-linux_x86_64.whl" && \
     uv pip install --system /tmp/wheels/*.whl && \
     rm -rf /tmp/wheels
 
