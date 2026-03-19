@@ -11,6 +11,8 @@ RUN apt-get update && apt-get install -y \
 # Install uv (fast Python package manager)
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh
 ENV PATH="/root/.local/bin:$PATH"
+# Allow uv to install system packages on Ubuntu 24.04
+ENV UV_BREAK_SYSTEM_PACKAGES=1
 
 WORKDIR /opt/CosyVoice
 
