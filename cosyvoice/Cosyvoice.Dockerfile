@@ -29,7 +29,12 @@ RUN git lfs install && \
 # Install PyTorch with CUDA 12.9 using direct wheel URLs (cp310 for cu129)
 RUN uv pip install --system \
     https://download.pytorch.org/whl/cu129/torch-2.8.0%2Bcu129-cp310-cp310-linux_x86_64.whl \
-    https://download.pytorch.org/whl/cu129/torchaudio-2.8.0%2Bcu129-cp310-cp310-linux_x86_64.whl
+    https://download.pytorch.org/whl/cu129/torchaudio-2.8.0%2Bcu129-cp310-cp310-linux_x86_64.whl \
+    || (echo "=== PyTorch install failed, checking Python ===" && \
+        python3.10 --version && \
+        which python3.10 && \
+        ls -la /usr/bin/python* && \
+        exit 1)
 
 # Install other dependencies (exclude torch/torchaudio and old extra-index-url to prevent downgrade)
 RUN grep -vE '^torch==|^torchaudio==|^--extra-index-url' requirements.txt > requirements_filtered.txt && \

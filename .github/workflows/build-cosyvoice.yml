@@ -63,5 +63,8 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           provenance: false
+          build-args: |
+            BUILDKIT_INLINE_CACHE=1
         env:
           BUILDX_NO_DEFAULT_ATTESTATIONS: 1
+          BUILDKIT_PROGRESS: plain
