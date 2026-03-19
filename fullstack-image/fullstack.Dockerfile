@@ -18,10 +18,10 @@ ENV PYTHON_VERSION=3.11
 ENV UV_VERSION=0.5.21
 ENV PNPM_VERSION=9.12.3
 ENV YARN_VERSION=1.22.22
-ENV NEOVIM_VERSION=0.10.4
+ENV NEOVIM_VERSION=0.11.6
 
 # 配置全局 PATH，确保所有手动安装的二进制文件随时可用
-ENV PATH="/root/.local/bin:/opt/maven/bin:/opt/nvim-linux64/bin:${PATH}"
+ENV PATH="/root/.local/bin:/opt/maven/bin:/opt/nvim-linux-x86_64/bin:${PATH}"
 
 # ==========================================
 # 2. 安装系统基础工具和 Python 3.11 环境
@@ -70,7 +70,7 @@ RUN curl -LsSf https://astral.sh/uv/install.sh | env UV_VERSION=${UV_VERSION} sh
 # ==========================================
 # 6. 精确安装现代版 Neovim (官方预编译二进制包)
 # ==========================================
-RUN wget https://github.com/neovim/neovim/releases/download/v${NEOVIM_VERSION}/nvim-linux64.tar.gz -O /tmp/nvim.tar.gz && \
+RUN wget https://github.com/neovim/neovim/releases/download/v${NEOVIM_VERSION}/nvim-linux-x86_64.tar.gz -O /tmp/nvim.tar.gz && \
     tar -xzf /tmp/nvim.tar.gz -C /opt && \
     rm /tmp/nvim.tar.gz
 
