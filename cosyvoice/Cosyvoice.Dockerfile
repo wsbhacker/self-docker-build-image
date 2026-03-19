@@ -32,7 +32,7 @@ RUN set -x && \
 
 # Install other dependencies (exclude torch/torchaudio and old extra-index-url to prevent downgrade)
 RUN grep -vE '^torch==|^torchaudio==|^--extra-index-url' requirements.txt > requirements_filtered.txt && \
-    uv pip install --system setuptools && \
+    uv pip install --system setuptools wheel && \
     uv pip install --system --no-build-isolation -r requirements_filtered.txt && \
     rm requirements_filtered.txt
 
