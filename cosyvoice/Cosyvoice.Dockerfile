@@ -19,9 +19,10 @@ RUN git lfs install && \
     git clone --recursive https://github.com/FunAudioLLM/CosyVoice.git .
 
 # Install PyTorch with CUDA 13.0 (native support for Blackwell)
+# Use --index-url to ensure CUDA version is selected (not CPU from PyPI)
 RUN uv pip install --system \
-    torch==2.10.0 torchaudio==2.10.0 \
-    --extra-index-url https://download.pytorch.org/whl/cu130
+    torch==2.10.0+cu130 torchaudio==2.10.0+cu130 \
+    --index-url https://download.pytorch.org/whl/cu130
 
 # Install other dependencies (exclude torch/torchaudio and old extra-index-url to prevent downgrade)
 RUN grep -vE '^torch==|^torchaudio==|^--extra-index-url' requirements.txt > requirements_filtered.txt && \
