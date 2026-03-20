@@ -102,4 +102,5 @@ ENV SHELL=/bin/zsh
 WORKDIR /app
 
 # 启动容器时直接进入 Zsh 终端
-CMD ["zsh"]
+# CMD ["zsh"]
+CMD ["sleep", "infinity"]
