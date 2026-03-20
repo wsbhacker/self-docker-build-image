@@ -8,6 +8,8 @@ FROM eclipse-temurin:${JDK_VERSION}-jdk-jammy
 
 # 设置环境变量，防止 apt 交互式安装卡住
 ENV DEBIAN_FRONTEND=noninteractive
+# --- 新增：设置时区环境变量 ---
+ENV TZ=Asia/Shanghai
 
 # ==========================================
 # 1. 集中管理所有核心工具的版本号 (按需修改)
@@ -24,24 +26,27 @@ ENV NEOVIM_VERSION=0.11.6
 ENV PATH="/root/.local/bin:/opt/maven/bin:/opt/nvim-linux-x86_64/bin:${PATH}"
 
 # ==========================================
-# 2. 安装系统基础工具和 Python 3.11 环境
+# 2. 安装系统基础工具、配置时区及 Python
 # ==========================================
 RUN apt-get update && \
-    # 安装基础依赖、编译工具链(供插件原生扩展使用)、以及终端工具
+    # --- 修改：安装 tzdata 并立即配置时区 ---
+    apt-get install -y --no-install-recommends tzdata && \
+    ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone && \
+    # 安装基础依赖
     apt-get install -y --no-install-recommends \
         software-properties-common curl wget git unzip sudo ca-certificates \
         build-essential jq ripgrep sqlite3 \
         zsh tmux && \
-    # 引入 deadsnakes PPA 以精准安装指定版本的 Python
+    # 引入 deadsnakes PPA 安装 Python
     add-apt-repository ppa:deadsnakes/ppa -y && \
     apt-get update && \
     apt-get install -y --no-install-recommends \
         python${PYTHON_VERSION} python${PYTHON_VERSION}-venv python${PYTHON_VERSION}-dev && \
-    # 将指定 Python 版本设为系统默认的 python3
+    # 将指定 Python 版本设为系统默认
     update-alternatives --install /usr/bin/python3 python3 /usr/bin/python${PYTHON_VERSION} 1 && \
     # 安装 pip
     curl -sS https://bootstrap.pypa.io/get-pip.py | python3 && \
-    # 清理缓存，缩减镜像体积
+    # 清理缓存
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # ==========================================
@@ -56,10 +61,8 @@ RUN wget https://archive.apache.org/dist/maven/maven-3/${MAVEN_VERSION}/binaries
 # 4. 精确安装指定版本的 Node.js, pnpm 和 yarn
 # ==========================================
 RUN wget https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.xz -O /tmp/nodejs.tar.xz && \
-    # 直接解压到 /usr/local，使其融入全局环境变量
     tar -xJf /tmp/nodejs.tar.xz -C /usr/local --strip-components=1 && \
     rm /tmp/nodejs.tar.xz && \
-    # 安装前端主流包管理器
     npm install -g pnpm@${PNPM_VERSION} yarn@${YARN_VERSION}
 
 # ==========================================
@@ -75,32 +78,21 @@ RUN wget https://github.com/neovim/neovim/releases/download/v${NEOVIM_VERSION}/n
     rm /tmp/nvim.tar.gz
 
 # ==========================================
-# 7. 安装 Claude Code (Native Install)
-# 注：官方强烈建议保持最新版以对接云端 API，故不锁版本
+# 7. 安装 Claude Code
 # ==========================================
 RUN curl -fsSL https://claude.ai/install.sh | bash
 
 # ==========================================
-# 8. 配置神级终端体验 (Zsh + Oh My Zsh + Tmux)
+# 8. 配置 Zsh + Oh My Zsh
 # ==========================================
-# 无交互安装 Oh My Zsh
 RUN sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended && \
-    # 下载自动补全和语法高亮插件
     git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions && \
     git clone https://github.com/zsh-users/zsh-syntax-highlighting ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting && \
-    # 启用插件，并将主题修改为带有 Git 分支提示的 'ys' 主题
     sed -i 's/plugins=(git)/plugins=(git zsh-autosuggestions zsh-syntax-highlighting)/' ~/.zshrc && \
     sed -i 's/ZSH_THEME="robbyrussell"/ZSH_THEME="ys"/' ~/.zshrc && \
-    # 添加别名：输入 vim 或 vi 自动打开现代化 Neovim
     echo "alias vim='nvim'" >> ~/.zshrc && \
     echo "alias vi='nvim'" >> ~/.zshrc
 
-# 设置默认 Shell 为 Zsh
 ENV SHELL=/bin/zsh
-
-# 设置工作目录
 WORKDIR /app
-
-# 启动容器时直接进入 Zsh 终端
-# CMD ["zsh"]
 CMD ["sleep", "infinity"]
