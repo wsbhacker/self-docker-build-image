@@ -13,10 +13,10 @@ on:
         required: false
         default: "fullstack"
         type: string
-      jdk_version:
-        description: "JDK 版本 (例如: 8, 11, 17, 21)"
+      build_args:
+        description: "构建参数 (格式: MAVEN_VERSION=3.9.8;NODE_VERSION=20.18.1，不传则使用 Dockerfile 默认值)"
         required: false
-        default: "8"
+        default: ""
         type: string
 
   push:
@@ -53,6 +53,23 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
 
+      - name: Parse build args
+        id: parse-args
+        run: |
+          BUILD_ARGS=""
+          if [[ -n "${{ inputs.build_args }}" ]]; then
+            IFS=';' read -ra PAIRS <<< "${{ inputs.build_args }}"
+            for pair in "${PAIRS[@]}"; do
+              if [[ -n "$pair" && "$pair" == *"="* ]]; then
+                BUILD_ARGS="${BUILD_ARGS}${pair}"$'\n'
+              fi
+            done
+          fi
+          echo "args<<EOF" >> $GITHUB_OUTPUT
+          echo -n "$BUILD_ARGS" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+        shell: bash
+
       - name: Extract metadata
         id: meta
         uses: docker/metadata-action@v6
@@ -70,7 +87,6 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           platforms: linux/amd64
-          build-args: |
-            JDK_VERSION=${{ github.event_name == 'workflow_dispatch' && inputs.jdk_version || '8' }}
+          build-args: ${{ steps.parse-args.outputs.args }}
           cache-from: type=gha
           cache-to: type=gha,mode=max

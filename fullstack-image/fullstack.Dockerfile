@@ -1,10 +1,20 @@
 # ==========================================
-# 0. 定义全局构建参数 (可动态指定 JDK 版本，默认设为 8)
+# 0. 定义全局构建参数 (可动态指定各软件版本)
 # ==========================================
 ARG JDK_VERSION=8
 
 # 使用 Eclipse Temurin 官方 JDK 镜像 (基于坚如磐石的 Ubuntu 22.04 Jammy)
 FROM eclipse-temurin:${JDK_VERSION}-jdk-jammy
+
+# 在 FROM 后重新声明 ARG 以接收外部 build-arg
+ARG MAVEN_VERSION=3.9.9
+ARG NODE_VERSION=20.18.0
+ARG PYTHON_VERSION=3.11
+ARG UV_VERSION=0.5.21
+ARG PNPM_VERSION=9.12.3
+ARG YARN_VERSION=1.22.22
+ARG NEOVIM_VERSION=0.11.6
+ARG CHEZMOI_VERSION=2.70.0
 
 # 设置环境变量，防止 apt 交互式安装卡住
 ENV DEBIAN_FRONTEND=noninteractive
@@ -12,16 +22,16 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV TZ=Asia/Shanghai
 
 # ==========================================
-# 1. 集中管理所有核心工具的版本号 (按需修改)
+# 1. 将构建参数转为环境变量 (供后续使用)
 # ==========================================
-ENV MAVEN_VERSION=3.9.9
-ENV NODE_VERSION=20.18.0
-ENV PYTHON_VERSION=3.11
-ENV UV_VERSION=0.5.21
-ENV PNPM_VERSION=9.12.3
-ENV YARN_VERSION=1.22.22
-ENV NEOVIM_VERSION=0.11.6
-ENV CHEZMOI_VERSION=2.70.0
+ENV MAVEN_VERSION=${MAVEN_VERSION}
+ENV NODE_VERSION=${NODE_VERSION}
+ENV PYTHON_VERSION=${PYTHON_VERSION}
+ENV UV_VERSION=${UV_VERSION}
+ENV PNPM_VERSION=${PNPM_VERSION}
+ENV YARN_VERSION=${YARN_VERSION}
+ENV NEOVIM_VERSION=${NEOVIM_VERSION}
+ENV CHEZMOI_VERSION=${CHEZMOI_VERSION}
 
 # 配置全局 PATH，确保所有手动安装的二进制文件随时可用
 ENV PATH="/root/.local/bin:/opt/maven/bin:/opt/nvim-linux-x86_64/bin:${PATH}"
