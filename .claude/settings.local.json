@@ -2,7 +2,9 @@
   "permissions": {
     "allow": [
       "WebFetch(domain:github.com)",
-      "Bash(curl -s \"https://download.pytorch.org/whl/cu130/torch/\")"
+      "Bash(curl -s \"https://download.pytorch.org/whl/cu130/torch/\")",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ]
   }
 }
