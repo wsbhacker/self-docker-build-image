@@ -21,6 +21,7 @@ ENV UV_VERSION=0.5.21
 ENV PNPM_VERSION=9.12.3
 ENV YARN_VERSION=1.22.22
 ENV NEOVIM_VERSION=0.11.6
+ENV CHEZMOI_VERSION=2.70.0
 
 # 配置全局 PATH，确保所有手动安装的二进制文件随时可用
 ENV PATH="/root/.local/bin:/opt/maven/bin:/opt/nvim-linux-x86_64/bin:${PATH}"
@@ -78,7 +79,14 @@ RUN wget https://github.com/neovim/neovim/releases/download/v${NEOVIM_VERSION}/n
     rm /tmp/nvim.tar.gz
 
 # ==========================================
-# 7. 安装 Claude Code
+# 7. 精确安装指定版本的 chezmoi (dotfiles 管理工具)
+# ==========================================
+RUN wget https://github.com/twpayne/chezmoi/releases/download/v${CHEZMOI_VERSION}/chezmoi_${CHEZMOI_VERSION}_linux_amd64.tar.gz -O /tmp/chezmoi.tar.gz && \
+    tar -xzf /tmp/chezmoi.tar.gz -C /usr/local/bin chezmoi && \
+    rm /tmp/chezmoi.tar.gz
+
+# ==========================================
+# 8. 安装 Claude Code
 # ==========================================
 RUN curl -fsSL https://claude.ai/install.sh | bash
 
