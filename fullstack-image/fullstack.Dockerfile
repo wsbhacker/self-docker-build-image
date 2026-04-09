@@ -98,11 +98,6 @@ RUN wget https://github.com/twpayne/chezmoi/releases/download/v${CHEZMOI_VERSION
     rm /tmp/chezmoi.tar.gz
 
 # ==========================================
-# 8. 安装 Claude Code
-# ==========================================
-RUN curl -fsSL https://claude.ai/install.sh | bash
-
-# ==========================================
 # 8. 配置 Zsh + Oh My Zsh
 # ==========================================
 RUN sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended && \
@@ -136,7 +131,12 @@ RUN groupadd -g ${USER_GID} neo && \
 # ==========================================
 USER neo
 RUN mkdir -p /home/neo/work
-WORKDIR /home/neo/work
 
+# ==========================================
+# 11. 为 neo 用户安装 Claude Code
+# ==========================================
+RUN curl -fsSL https://claude.ai/install.sh | bash
+
+WORKDIR /home/neo/work
 ENV SHELL=/bin/zsh
 CMD ["sleep", "infinity"]
