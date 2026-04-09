@@ -38,7 +38,7 @@ ENV USER_UID=${USER_UID}
 ENV USER_GID=${USER_GID}
 
 # 配置全局 PATH，确保所有手动安装的二进制文件随时可用
-ENV PATH="/root/.local/bin:/opt/maven/bin:/opt/nvim-linux-x86_64/bin:${PATH}"
+ENV PATH="/home/neo/.local/bin:/home/neo/.local/node/bin:/home/neo/opt/maven/bin:/home/neo/opt/nvim/bin:${PATH}"
 
 # ==========================================
 # 2. 安装系统基础工具、配置时区及 Python
@@ -64,43 +64,29 @@ RUN apt-get update && \
     # 清理缓存
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# ==========================================
-# 3. 精确安装指定版本的 Maven
-# ==========================================
-RUN wget https://archive.apache.org/dist/maven/maven-3/${MAVEN_VERSION}/binaries/apache-maven-${MAVEN_VERSION}-bin.tar.gz -O /tmp/maven.tar.gz && \
-    tar xzf /tmp/maven.tar.gz -C /opt && \
-    ln -s /opt/apache-maven-${MAVEN_VERSION} /opt/maven && \
-    rm /tmp/maven.tar.gz
 
 # ==========================================
-# 4. 精确安装指定版本的 Node.js, pnpm 和 yarn
+# 8. 创建 neo 用户（非 root）并配置 sudo
 # ==========================================
-RUN wget https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.xz -O /tmp/nodejs.tar.xz && \
-    tar -xJf /tmp/nodejs.tar.xz -C /usr/local --strip-components=1 && \
-    rm /tmp/nodejs.tar.xz && \
-    npm install -g pnpm@${PNPM_VERSION} yarn@${YARN_VERSION}
+# 创建用户组并指定 GID，创建用户并指定 UID/GID（支持与宿主机用户匹配）
+RUN groupadd -g ${USER_GID} neo && \
+    useradd -m -s /bin/zsh -u ${USER_UID} -g neo neo && \
+    # 配置 NOPASSWD sudo 权限
+    echo "neo ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/neo && \
+    chmod 0440 /etc/sudoers.d/neo
 
 # ==========================================
-# 5. 精确安装指定版本的 uv (极速 Python 包管理器)
+# 9. 切换到 neo 用户
 # ==========================================
-RUN curl -LsSf https://astral.sh/uv/install.sh | env UV_VERSION=${UV_VERSION} sh
+USER neo
 
 # ==========================================
-# 6. 精确安装现代版 Neovim (官方预编译二进制包)
+# 10. 创建 neo 目录结构
 # ==========================================
-RUN wget https://github.com/neovim/neovim/releases/download/v${NEOVIM_VERSION}/nvim-linux-x86_64.tar.gz -O /tmp/nvim.tar.gz && \
-    tar -xzf /tmp/nvim.tar.gz -C /opt && \
-    rm /tmp/nvim.tar.gz
+RUN mkdir -p ~/.local/bin ~/.local/share ~/opt ~/work
 
 # ==========================================
-# 7. 精确安装指定版本的 chezmoi (dotfiles 管理工具)
-# ==========================================
-RUN wget https://github.com/twpayne/chezmoi/releases/download/v${CHEZMOI_VERSION}/chezmoi_${CHEZMOI_VERSION}_linux_amd64.tar.gz -O /tmp/chezmoi.tar.gz && \
-    tar -xzf /tmp/chezmoi.tar.gz -C /usr/local/bin chezmoi && \
-    rm /tmp/chezmoi.tar.gz
-
-# ==========================================
-# 8. 配置 Zsh + Oh My Zsh
+# 11. 配置 Zsh + Oh My Zsh (neo 用户)
 # ==========================================
 RUN sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended && \
     git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions && \
@@ -111,31 +97,44 @@ RUN sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master
     echo "alias vi='nvim'" >> ~/.zshrc
 
 # ==========================================
-# 9. 创建 neo 用户（非 root）
+# 12. 精确安装指定版本的 Maven (neo 用户)
 # ==========================================
-# 创建用户组并指定 GID，创建用户并指定 UID/GID（支持与宿主机用户匹配）
-RUN groupadd -g ${USER_GID} neo && \
-    useradd -m -s /bin/zsh -u ${USER_UID} -g neo neo && \
-    # 为 neo 安装 Oh My Zsh (使用 --unattended 非交互模式)
-    su - neo -c 'sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended' && \
-    # 安装 zsh 插件 (root 执行，需 chown)
-    git clone https://github.com/zsh-users/zsh-autosuggestions /home/neo/.oh-my-zsh/custom/plugins/zsh-autosuggestions && \
-    git clone https://github.com/zsh-users/zsh-syntax-highlighting /home/neo/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting && \
-    chown -R neo:neo /home/neo/.oh-my-zsh/custom/plugins && \
-    # 配置 .zshrc
-    sed -i 's/plugins=(git)/plugins=(git zsh-autosuggestions zsh-syntax-highlighting)/' /home/neo/.zshrc && \
-    sed -i 's/ZSH_THEME="robbyrussell"/ZSH_THEME="ys"/' /home/neo/.zshrc && \
-    echo "alias vim='nvim'" >> /home/neo/.zshrc && \
-    echo "alias vi='nvim'" >> /home/neo/.zshrc
+RUN wget https://archive.apache.org/dist/maven/maven-3/${MAVEN_VERSION}/binaries/apache-maven-${MAVEN_VERSION}-bin.tar.gz -O /tmp/maven.tar.gz && \
+    tar xzf /tmp/maven.tar.gz -C ~/opt && \
+    ln -s ~/opt/apache-maven-${MAVEN_VERSION} ~/opt/maven && \
+    rm /tmp/maven.tar.gz
 
 # ==========================================
-# 10. 切换到 neo 用户
+# 13. 精确安装指定版本的 Node.js, pnpm 和 yarn (neo 用户)
 # ==========================================
-USER neo
-RUN mkdir -p /home/neo/work
+RUN wget https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.xz -O /tmp/nodejs.tar.xz && \
+    mkdir -p ~/.local/node && \
+    tar -xJf /tmp/nodejs.tar.xz -C ~/.local/node --strip-components=1 && \
+    rm /tmp/nodejs.tar.xz && \
+    ~/.local/node/bin/npm install -g pnpm@${PNPM_VERSION} yarn@${YARN_VERSION}
 
 # ==========================================
-# 11. 为 neo 用户安装 Claude Code
+# 14. 精确安装指定版本的 uv (neo 用户)
+# ==========================================
+RUN curl -LsSf https://astral.sh/uv/install.sh | env UV_VERSION=${UV_VERSION} sh
+
+# ==========================================
+# 15. 精确安装现代版 Neovim (neo 用户)
+# ==========================================
+RUN wget https://github.com/neovim/neovim/releases/download/v${NEOVIM_VERSION}/nvim-linux-x86_64.tar.gz -O /tmp/nvim.tar.gz && \
+    tar -xzf /tmp/nvim.tar.gz -C ~/opt && \
+    ln -s ~/opt/nvim-linux-x86_64 ~/opt/nvim && \
+    rm /tmp/nvim.tar.gz
+
+# ==========================================
+# 16. 精确安装指定版本的 chezmoi (neo 用户)
+# ==========================================
+RUN wget https://github.com/twpayne/chezmoi/releases/download/v${CHEZMOI_VERSION}/chezmoi_${CHEZMOI_VERSION}_linux_amd64.tar.gz -O /tmp/chezmoi.tar.gz && \
+    tar -xzf /tmp/chezmoi.tar.gz -C ~/.local/bin chezmoi && \
+    rm /tmp/chezmoi.tar.gz
+
+# ==========================================
+# 17. 为 neo 用户安装 Claude Code
 # ==========================================
 RUN curl -fsSL https://claude.ai/install.sh | bash
 
