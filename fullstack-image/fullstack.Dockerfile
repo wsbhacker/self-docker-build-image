@@ -15,6 +15,8 @@ ARG PNPM_VERSION=9.12.3
 ARG YARN_VERSION=1.22.22
 ARG NEOVIM_VERSION=0.11.6
 ARG CHEZMOI_VERSION=2.70.0
+ARG USER_UID=1000
+ARG USER_GID=1000
 
 # 设置环境变量，防止 apt 交互式安装卡住
 ENV DEBIAN_FRONTEND=noninteractive
@@ -114,7 +116,9 @@ RUN sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master
 # ==========================================
 # 9. 创建 neo 用户（非 root）
 # ==========================================
-RUN useradd -m -s /bin/zsh neo && \
+# 创建用户组并指定 GID，创建用户并指定 UID/GID（支持与宿主机用户匹配）
+RUN groupadd -g ${USER_GID} neo && \
+    useradd -m -s /bin/zsh -u ${USER_UID} -g neo neo && \
     # 为 neo 安装 Oh My Zsh (使用 --unattended 非交互模式)
     su - neo -c 'sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended' && \
     # 安装 zsh 插件 (root 执行，需 chown)
