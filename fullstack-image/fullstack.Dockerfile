@@ -111,6 +111,28 @@ RUN sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master
     echo "alias vim='nvim'" >> ~/.zshrc && \
     echo "alias vi='nvim'" >> ~/.zshrc
 
+# ==========================================
+# 9. 创建 neo 用户（非 root）
+# ==========================================
+RUN useradd -m -s /bin/zsh neo && \
+    # 为 neo 安装 Oh My Zsh (使用 --unattended 非交互模式)
+    su - neo -c 'sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended' && \
+    # 安装 zsh 插件 (root 执行，需 chown)
+    git clone https://github.com/zsh-users/zsh-autosuggestions /home/neo/.oh-my-zsh/custom/plugins/zsh-autosuggestions && \
+    git clone https://github.com/zsh-users/zsh-syntax-highlighting /home/neo/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting && \
+    chown -R neo:neo /home/neo/.oh-my-zsh/custom/plugins && \
+    # 配置 .zshrc
+    sed -i 's/plugins=(git)/plugins=(git zsh-autosuggestions zsh-syntax-highlighting)/' /home/neo/.zshrc && \
+    sed -i 's/ZSH_THEME="robbyrussell"/ZSH_THEME="ys"/' /home/neo/.zshrc && \
+    echo "alias vim='nvim'" >> /home/neo/.zshrc && \
+    echo "alias vi='nvim'" >> /home/neo/.zshrc
+
+# ==========================================
+# 10. 切换到 neo 用户
+# ==========================================
+USER neo
+RUN mkdir -p /home/neo/work
+WORKDIR /home/neo/work
+
 ENV SHELL=/bin/zsh
-WORKDIR /app
 CMD ["sleep", "infinity"]
