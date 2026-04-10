@@ -15,6 +15,7 @@ ARG PNPM_VERSION=9.12.3
 ARG YARN_VERSION=1.22.22
 ARG NEOVIM_VERSION=0.11.6
 ARG CHEZMOI_VERSION=2.70.0
+ARG OPENSPEC_VERSION=1.2.0
 ARG USER_UID=1000
 ARG USER_GID=1000
 
@@ -34,6 +35,7 @@ ENV PNPM_VERSION=${PNPM_VERSION}
 ENV YARN_VERSION=${YARN_VERSION}
 ENV NEOVIM_VERSION=${NEOVIM_VERSION}
 ENV CHEZMOI_VERSION=${CHEZMOI_VERSION}
+ENV OPENSPEC_VERSION=${OPENSPEC_VERSION}
 ENV USER_UID=${USER_UID}
 ENV USER_GID=${USER_GID}
 
@@ -134,7 +136,12 @@ RUN wget https://github.com/twpayne/chezmoi/releases/download/v${CHEZMOI_VERSION
     rm /tmp/chezmoi.tar.gz
 
 # ==========================================
-# 17. 为 neo 用户安装 Claude Code
+# 17. 为 neo 用户安装 OpenSpec
+# ==========================================
+RUN ~/.local/node/bin/npm install -g @fission-ai/openspec@${OPENSPEC_VERSION}
+
+# ==========================================
+# 18. 为 neo 用户安装 Claude Code
 # ==========================================
 RUN curl -fsSL https://claude.ai/install.sh | bash
 
