@@ -9,7 +9,7 @@ FROM eclipse-temurin:${JDK_VERSION}-jdk-noble
 # 在 FROM 后重新声明 ARG 以接收外部 build-arg
 ARG MAVEN_VERSION=3.9.9
 ARG NODE_VERSION=20.18.0
-ARG PYTHON_VERSION=3.11
+ARG PYTHON_VERSION=3.12
 ARG UV_VERSION=0.5.21
 ARG PNPM_VERSION=9.12.3
 ARG YARN_VERSION=1.22.22
@@ -70,10 +70,15 @@ RUN apt-get update && \
 # ==========================================
 # 8. 创建 neo 用户（非 root）并配置 sudo
 # ==========================================
+# 先判断 GID 是否存在
 # 创建用户组并指定 GID，创建用户并指定 UID/GID（支持与宿主机用户匹配）
-RUN groupadd -g ${USER_GID} neo && \
-    useradd -m -s /bin/zsh -u ${USER_UID} -g neo neo && \
-    # 配置 NOPASSWD sudo 权限
+RUN if getent group ${USER_GID}; then \
+        group_name=$(getent group ${USER_GID} | cut -d: -f1); \
+    else \
+        group_name=neo; \
+        groupadd -g ${USER_GID} $group_name; \
+    fi && \
+    useradd -m -s /bin/zsh -u ${USER_UID} -g ${USER_GID} neo && \
     echo "neo ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/neo && \
     chmod 0440 /etc/sudoers.d/neo
 
