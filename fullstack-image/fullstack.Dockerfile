@@ -157,6 +157,9 @@ RUN ~/.local/node/bin/npm install -g @fission-ai/openspec@${OPENSPEC_VERSION}
 # ==========================================
 RUN curl -fsSL https://claude.ai/install.sh | bash
 
+ENV ZDOTDIR=/home/${USERNAME}/zsh
+ENV HOME=/home/${USERNAME}
+
 WORKDIR /home/${USERNAME}/work
 ENV SHELL=/bin/zsh
 CMD ["sleep", "infinity"]
