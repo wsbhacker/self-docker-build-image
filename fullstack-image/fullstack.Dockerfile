@@ -22,6 +22,7 @@ ARG CHEZMOI_VERSION=2.70.0
 ARG OPENSPEC_VERSION=1.2.0
 ARG USER_UID=1000
 ARG USER_GID=1000
+ARG USERNAME=neo
 
 # 设置环境变量，防止 apt 交互式安装卡住
 ENV DEBIAN_FRONTEND=noninteractive
@@ -42,9 +43,10 @@ ENV CHEZMOI_VERSION=${CHEZMOI_VERSION}
 ENV OPENSPEC_VERSION=${OPENSPEC_VERSION}
 ENV USER_UID=${USER_UID}
 ENV USER_GID=${USER_GID}
+ENV USERNAME=${USERNAME}
 
 # 配置全局 PATH，确保所有手动安装的二进制文件随时可用
-ENV PATH="/home/neo/.local/bin:/home/neo/.local/node/bin:/home/neo/opt/maven/bin:/home/neo/opt/nvim/bin:${PATH}"
+ENV PATH="/home/${USERNAME}/.local/bin:/home/${USERNAME}/.local/node/bin:/home/${USERNAME}/opt/maven/bin:/home/${USERNAME}/opt/nvim/bin:${PATH}"
 
 # ==========================================
 # 2. 安装系统基础工具、配置时区及 Python
@@ -81,11 +83,11 @@ RUN set -eux; \
         groupdel "$existing_group" || true; \
     fi; \
     \
-    groupadd -g ${USER_GID} neo; \
-    useradd -m -s /bin/zsh -u ${USER_UID} -g ${USER_GID} neo; \
+    groupadd -g ${USER_GID} ${USERNAME}; \
+    useradd -m -s /bin/zsh -u ${USER_UID} -g ${USER_GID} ${USERNAME}; \
     \
-    echo "neo ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/neo; \
-    chmod 0440 /etc/sudoers.d/neo
+    echo "${USERNAME} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/${USERNAME}; \
+    chmod 0440 /etc/sudoers.d/${USERNAME}
 
 # ==========================================
 # 9. 切换到 neo 用户
@@ -155,6 +157,6 @@ RUN ~/.local/node/bin/npm install -g @fission-ai/openspec@${OPENSPEC_VERSION}
 # ==========================================
 RUN curl -fsSL https://claude.ai/install.sh | bash
 
-WORKDIR /home/neo/work
+WORKDIR /home/${USERNAME}/work
 ENV SHELL=/bin/zsh
 CMD ["sleep", "infinity"]
