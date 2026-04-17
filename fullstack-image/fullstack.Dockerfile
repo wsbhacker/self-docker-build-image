@@ -2,6 +2,10 @@
 # 0. 定义全局构建参数 (可动态指定各软件版本)
 # ==========================================
 ARG JDK_VERSION=8
+ARG PYTHON_VERSION=3.12
+
+# ===== Python multi-stage =====
+FROM python:${PYTHON_VERSION}-slim AS python
 
 # 使用 Eclipse Temurin 官方 JDK 镜像 (基于 Ubuntu 24 noble)
 FROM eclipse-temurin:${JDK_VERSION}-jdk-noble
@@ -54,18 +58,11 @@ RUN apt-get update && \
         software-properties-common curl wget git unzip sudo ca-certificates \
         build-essential jq ripgrep sqlite3 \
         zsh tmux && \
-    # 引入 deadsnakes PPA 安装 Python
-    add-apt-repository ppa:deadsnakes/ppa -y && \
-    apt-get update && \
-    apt-get install -y --no-install-recommends \
-        python${PYTHON_VERSION} python${PYTHON_VERSION}-venv python${PYTHON_VERSION}-dev && \
-    # 将指定 Python 版本设为系统默认
-    update-alternatives --install /usr/bin/python3 python3 /usr/bin/python${PYTHON_VERSION} 1 && \
-    # 安装 pip
-    curl -sS https://bootstrap.pypa.io/get-pip.py | python3 && \
     # 清理缓存
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
+# ===== Python multi-stage copy =====
+COPY --from=python /usr/local /usr/local
 
 # ==========================================
 # 8. 创建 neo 用户（非 root）并配置 sudo
