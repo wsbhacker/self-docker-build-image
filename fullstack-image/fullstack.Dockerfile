@@ -44,6 +44,8 @@ ENV OPENSPEC_VERSION=${OPENSPEC_VERSION}
 ENV USER_UID=${USER_UID}
 ENV USER_GID=${USER_GID}
 ENV USERNAME=${USERNAME}
+ENV ZDOTDIR=/home/${USERNAME}/zsh
+ENV HOME=/home/${USERNAME}
 
 # 配置全局 PATH，确保所有手动安装的二进制文件随时可用
 ENV PATH="/home/${USERNAME}/.local/bin:/home/${USERNAME}/.local/node/bin:/home/${USERNAME}/opt/maven/bin:/home/${USERNAME}/opt/nvim/bin:${PATH}"
@@ -157,8 +159,7 @@ RUN ~/.local/node/bin/npm install -g @fission-ai/openspec@${OPENSPEC_VERSION}
 # ==========================================
 RUN curl -fsSL https://claude.ai/install.sh | bash
 
-ENV ZDOTDIR=/home/${USERNAME}/zsh
-ENV HOME=/home/${USERNAME}
+
 
 WORKDIR /home/${USERNAME}/work
 ENV SHELL=/bin/zsh
