@@ -67,16 +67,24 @@ COPY --from=python /usr/local /usr/local
 # ==========================================
 # 8. 创建 neo 用户（非 root）并配置 sudo
 # ==========================================
-# 先判断 GID 是否存在
-# 创建用户组并指定 GID，创建用户并指定 UID/GID（支持与宿主机用户匹配）
-RUN if getent group ${USER_GID}; then \
-        group_name=$(getent group ${USER_GID} | cut -d: -f1); \
-    else \
-        group_name=neo; \
-        groupadd -g ${USER_GID} $group_name; \
-    fi && \
-    useradd -m -s /bin/zsh -u ${USER_UID} -g ${USER_GID} neo && \
-    echo "neo ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/neo && \
+ # id被占用就删除原来的,不存在就创建
+RUN set -eux; \
+    existing_user=$(getent passwd ${USER_UID} | cut -d: -f1 || true); \
+    existing_group=$(getent group ${USER_GID} | cut -d: -f1 || true); \
+    \
+    # 如果 UID 已存在（比如 ubuntu），直接删除它的账号映射（只影响容器）
+    if [ -n "$existing_user" ]; then \
+        userdel -r "$existing_user" || true; \
+    fi; \
+    \
+    if [ -n "$existing_group" ]; then \
+        groupdel "$existing_group" || true; \
+    fi; \
+    \
+    groupadd -g ${USER_GID} neo; \
+    useradd -m -s /bin/zsh -u ${USER_UID} -g ${USER_GID} neo; \
+    \
+    echo "neo ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/neo; \
     chmod 0440 /etc/sudoers.d/neo
 
 # ==========================================
