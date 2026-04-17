@@ -3,8 +3,8 @@
 # ==========================================
 ARG JDK_VERSION=8
 
-# 使用 Eclipse Temurin 官方 JDK 镜像 (基于坚如磐石的 Ubuntu 22.04 Jammy)
-FROM eclipse-temurin:${JDK_VERSION}-jdk-jammy
+# 使用 Eclipse Temurin 官方 JDK 镜像 (基于 Ubuntu 24 noble)
+FROM eclipse-temurin:${JDK_VERSION}-jdk-noble
 
 # 在 FROM 后重新声明 ARG 以接收外部 build-arg
 ARG MAVEN_VERSION=3.9.9
