@@ -70,13 +70,12 @@ COPY --from=python /usr/local /usr/local
 
 # ==========================================
 # 8. 创建 neo 用户（非 root）并配置 sudo
+# id被占用就删除原来的,不存在就创建
 # ==========================================
- # id被占用就删除原来的,不存在就创建
 RUN set -eux; \
     existing_user=$(getent passwd ${USER_UID} | cut -d: -f1 || true); \
     existing_group=$(getent group ${USER_GID} | cut -d: -f1 || true); \
     \
-    # 如果 UID 已存在（比如 ubuntu），直接删除它的账号映射（只影响容器）
     if [ -n "$existing_user" ]; then \
         userdel -r "$existing_user" || true; \
     fi; \
@@ -94,23 +93,12 @@ RUN set -eux; \
 # ==========================================
 # 9. 切换到 neo 用户
 # ==========================================
-USER neo
+USER ${USERNAME}
 
 # ==========================================
 # 10. 创建 neo 目录结构
 # ==========================================
 RUN mkdir -p ~/.local/bin ~/.local/share ~/opt ~/work
-
-# ==========================================
-# 11. 配置 Zsh + Oh My Zsh (neo 用户)
-# ==========================================
-RUN sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended && \
-    git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions && \
-    git clone https://github.com/zsh-users/zsh-syntax-highlighting ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting && \
-    sed -i 's/plugins=(git)/plugins=(git zsh-autosuggestions zsh-syntax-highlighting)/' ~/.zshrc && \
-    sed -i 's/ZSH_THEME="robbyrussell"/ZSH_THEME="ys"/' ~/.zshrc && \
-    echo "alias vim='nvim'" >> ~/.zshrc && \
-    echo "alias vi='nvim'" >> ~/.zshrc
 
 # ==========================================
 # 12. 精确安装指定版本的 Maven (neo 用户)
@@ -159,8 +147,16 @@ RUN ~/.local/node/bin/npm install -g @fission-ai/openspec@${OPENSPEC_VERSION}
 # ==========================================
 RUN curl -fsSL https://claude.ai/install.sh | bash
 
-
+# ==========================================
+# 19. 添加 entrypoint（处理 ZDOTDIR + Oh My Zsh）
+# ==========================================
+USER root
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+USER ${USERNAME}
 
 WORKDIR /home/${USERNAME}/work
 ENV SHELL=/bin/zsh
+
+ENTRYPOINT ["/entrypoint.sh"]
 CMD ["sleep", "infinity"]
