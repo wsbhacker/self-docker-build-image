@@ -18,6 +18,11 @@ on:
         required: false
         default: ""
         type: string
+      description:
+        description: "镜像描述信息"
+        required: false
+        default: ""
+        type: string
 
   push:
     branches:
@@ -78,6 +83,8 @@ jobs:
           tags: |
             type=raw,value=${{ github.event_name == 'workflow_dispatch' && inputs.version_tag || 'latest' }},enable=${{ github.event_name == 'workflow_dispatch' }}
             type=raw,value=latest,enable=${{ github.event_name == 'push' }}
+          labels: |
+            build.description=${{ inputs.description }}
 
       - name: Build and push image
         uses: docker/build-push-action@v7
