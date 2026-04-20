@@ -3,6 +3,7 @@
 # ==========================================
 ARG JDK_VERSION=8
 ARG PYTHON_VERSION=3.12
+ARG CLAUDE_VERSION=latest
 
 # ===== Python multi-stage =====
 FROM python:${PYTHON_VERSION}-slim AS python
@@ -15,6 +16,7 @@ ARG MAVEN_VERSION=3.9.9
 ARG NODE_VERSION=20.18.0
 ARG PYTHON_VERSION=3.12
 ARG UV_VERSION=0.5.21
+ARG CLAUDE_VERSION=latest
 ARG PNPM_VERSION=9.12.3
 ARG YARN_VERSION=1.22.22
 ARG NEOVIM_VERSION=0.11.6
@@ -41,6 +43,7 @@ ENV YARN_VERSION=${YARN_VERSION}
 ENV NEOVIM_VERSION=${NEOVIM_VERSION}
 ENV CHEZMOI_VERSION=${CHEZMOI_VERSION}
 ENV OPENSPEC_VERSION=${OPENSPEC_VERSION}
+ENV CLAUDE_VERSION=${CLAUDE_VERSION}
 ENV USER_UID=${USER_UID}
 ENV USER_GID=${USER_GID}
 ENV USERNAME=${USERNAME}
@@ -145,7 +148,7 @@ RUN ~/.local/node/bin/npm install -g @fission-ai/openspec@${OPENSPEC_VERSION}
 # ==========================================
 # 18. 为 neo 用户安装 Claude Code
 # ==========================================
-RUN curl -fsSL https://claude.ai/install.sh | bash
+RUN curl -fsSL https://claude.ai/install.sh | bash -s -- ${CLAUDE_VERSION}
 
 # ==========================================
 # 19. 添加 entrypoint（处理 ZDOTDIR + Oh My Zsh）
