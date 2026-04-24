@@ -62,7 +62,7 @@ ENV TARGET_PLATFORM=${TARGET_PLATFORM}
 ENV BUILD_TOOLS_VERSION=${BUILD_TOOLS_VERSION}
 
 # 配置全局 PATH，确保所有手动安装的二进制文件随时可用
-ENV PATH="/home/${USERNAME}/.local/bin:/home/${USERNAME}/.local/node/bin:/home/${USERNAME}/opt/maven/bin:/home/${USERNAME}/opt/nvim/bin:${ANDROID_HOME}/cmdline-tools/latest/bin:${ANDROID_HOME}/platform-tools:${PATH}"
+ENV PATH="/home/${USERNAME}/.local/bin:/home/${USERNAME}/.local/node/bin:/home/${USERNAME}/opt/maven/bin:/home/${USERNAME}/opt/gradle/bin:/home/${USERNAME}/opt/nvim/bin:${ANDROID_HOME}/cmdline-tools/latest/bin:${ANDROID_HOME}/platform-tools:${PATH}"
 
 # ==========================================
 # 2. 安装系统基础工具、配置时区及 Python
