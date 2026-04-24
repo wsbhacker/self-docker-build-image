@@ -14,6 +14,7 @@ FROM eclipse-temurin:${JDK_VERSION}-jdk-noble
 
 # 在 FROM 后重新声明 ARG 以接收外部 build-arg
 ARG MAVEN_VERSION=3.9.9
+ARG GRADLE_VERSION=9.4.1
 ARG NODE_VERSION=20.18.0
 ARG PYTHON_VERSION=3.12
 ARG UV_VERSION=0.5.21
@@ -39,6 +40,7 @@ ENV TZ=Asia/Shanghai
 # 1. 将构建参数转为环境变量 (供后续使用)
 # ==========================================
 ENV MAVEN_VERSION=${MAVEN_VERSION}
+ENV GRADLE_VERSION=${GRADLE_VERSION}
 ENV NODE_VERSION=${NODE_VERSION}
 ENV PYTHON_VERSION=${PYTHON_VERSION}
 ENV UV_VERSION=${UV_VERSION}
@@ -60,7 +62,7 @@ ENV TARGET_PLATFORM=${TARGET_PLATFORM}
 ENV BUILD_TOOLS_VERSION=${BUILD_TOOLS_VERSION}
 
 # 配置全局 PATH，确保所有手动安装的二进制文件随时可用
-ENV PATH="/home/${USERNAME}/.local/bin:/home/${USERNAME}/.local/node/bin:/home/${USERNAME}/opt/maven/bin:/home/${USERNAME}/opt/nvim/bin:${ANDROID_HOME}/cmdline-tools/latest/bin:${ANDROID_HOME}/platform-tools:${PATH}"
+ENV PATH="/home/${USERNAME}/.local/bin:/home/${USERNAME}/.local/node/bin:/home/${USERNAME}/opt/maven/bin:/home/${USERNAME}/opt/gradle/bin:/home/${USERNAME}/opt/nvim/bin:${ANDROID_HOME}/cmdline-tools/latest/bin:${ANDROID_HOME}/platform-tools:${PATH}"
 
 # ==========================================
 # 2. 安装系统基础工具、配置时区及 Python
@@ -127,6 +129,14 @@ RUN wget https://archive.apache.org/dist/maven/maven-3/${MAVEN_VERSION}/binaries
     tar xzf /tmp/maven.tar.gz -C ~/opt && \
     ln -s ~/opt/apache-maven-${MAVEN_VERSION} ~/opt/maven && \
     rm /tmp/maven.tar.gz
+
+# ==========================================
+# 12.5. 精确安装指定版本的 Gradle (neo 用户)
+# ==========================================
+RUN wget https://services.gradle.org/distributions/gradle-${GRADLE_VERSION}-bin.zip -O /tmp/gradle.zip && \
+    unzip /tmp/gradle.zip -d ~/opt && \
+    mv ~/opt/gradle-${GRADLE_VERSION} ~/opt/gradle && \
+    rm /tmp/gradle.zip
 
 # ==========================================
 # 13. 精确安装指定版本的 Node.js, pnpm 和 yarn (neo 用户)
