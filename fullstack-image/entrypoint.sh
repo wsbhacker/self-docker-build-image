@@ -38,12 +38,12 @@ if [ ! -f "${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager" ]; then
   rm /tmp/cmdline-tools.zip
 
   # 接受许可证
-  yes | "${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null 2>&1 || true
+  yes | "${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager" ${SDK_PROXY_ARGS} --licenses > /dev/null 2>&1 || true
 
   # 安装 SDK 组件
-  "${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager" \
-    "platforms;${TARGET_PLATFORM:-android-34}" \
-    "build-tools;${BUILD_TOOLS_VERSION:-34.0.0}" \
+  "${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager" ${SDK_PROXY_ARGS} \
+    "platforms;${TARGET_PLATFORM:-android-35}" \
+    "build-tools;${BUILD_TOOLS_VERSION:-35.0.0}" \
     "platform-tools"
 fi
 
