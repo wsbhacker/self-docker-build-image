@@ -4,6 +4,7 @@
 ARG JDK_VERSION=8
 ARG PYTHON_VERSION=3.12
 ARG CLAUDE_VERSION=latest
+ARG ANDROID_CMDLINE_TOOLS_VERSION=14742923
 
 # ===== Python multi-stage =====
 FROM python:${PYTHON_VERSION}-slim AS python
@@ -25,6 +26,9 @@ ARG OPENSPEC_VERSION=1.2.0
 ARG USER_UID=1000
 ARG USER_GID=1000
 ARG USERNAME=neo
+ARG TARGET_PLATFORM=android-34
+ARG BUILD_TOOLS_VERSION=34.0.0
+ARG ANDROID_CMDLINE_TOOLS_VERSION=14742923
 
 # 设置环境变量，防止 apt 交互式安装卡住
 ENV DEBIAN_FRONTEND=noninteractive
@@ -49,9 +53,14 @@ ENV USER_GID=${USER_GID}
 ENV USERNAME=${USERNAME}
 ENV ZDOTDIR=/home/${USERNAME}/zsh
 ENV HOME=/home/${USERNAME}
+ENV ANDROID_HOME=/opt/android-sdk
+ENV ANDROID_SDK_ROOT=/opt/android-sdk
+ENV ANDROID_CMDLINE_TOOLS_VERSION=${ANDROID_CMDLINE_TOOLS_VERSION}
+ENV TARGET_PLATFORM=${TARGET_PLATFORM}
+ENV BUILD_TOOLS_VERSION=${BUILD_TOOLS_VERSION}
 
 # 配置全局 PATH，确保所有手动安装的二进制文件随时可用
-ENV PATH="/home/${USERNAME}/.local/bin:/home/${USERNAME}/.local/node/bin:/home/${USERNAME}/opt/maven/bin:/home/${USERNAME}/opt/nvim/bin:${PATH}"
+ENV PATH="/home/${USERNAME}/.local/bin:/home/${USERNAME}/.local/node/bin:/home/${USERNAME}/opt/maven/bin:/home/${USERNAME}/opt/nvim/bin:${ANDROID_HOME}/cmdline-tools/latest/bin:${ANDROID_HOME}/platform-tools:${PATH}"
 
 # ==========================================
 # 2. 安装系统基础工具、配置时区及 Python
@@ -102,6 +111,14 @@ USER ${USERNAME}
 # 10. 创建 neo 目录结构
 # ==========================================
 RUN mkdir -p ~/.local/bin ~/.local/share ~/opt ~/work
+
+# ==========================================
+# 11. 创建 Android SDK 目录
+# ==========================================
+USER root
+RUN mkdir -p ${ANDROID_HOME} && \
+    chown -R ${USERNAME}:${USERNAME} ${ANDROID_HOME}
+USER ${USERNAME}
 
 # ==========================================
 # 12. 精确安装指定版本的 Maven (neo 用户)

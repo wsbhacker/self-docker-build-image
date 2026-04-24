@@ -19,4 +19,32 @@ if [ ! -d "$ZDOTDIR/ohmyzsh" ]; then
   fi
 fi
 
+# 检查并安装 Android SDK
+if [ ! -f "${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager" ]; then
+  echo "Installing Android SDK..."
+
+  # 确保目录权限
+  sudo chown -R "${USERNAME}:${USERNAME}" "${ANDROID_HOME}" 2>/dev/null || true
+
+  # 下载 cmdline-tools
+  ANDROID_CMDLINE_TOOLS_VERSION=${ANDROID_CMDLINE_TOOLS_VERSION:-14742923}
+  wget https://dl.google.com/android/repository/commandlinetools-linux-${ANDROID_CMDLINE_TOOLS_VERSION}_latest.zip \
+    -O /tmp/cmdline-tools.zip
+
+  # 解压并安装
+  mkdir -p "${ANDROID_HOME}/cmdline-tools"
+  unzip /tmp/cmdline-tools.zip -d "${ANDROID_HOME}/cmdline-tools"
+  mv "${ANDROID_HOME}/cmdline-tools/cmdline-tools" "${ANDROID_HOME}/cmdline-tools/latest"
+  rm /tmp/cmdline-tools.zip
+
+  # 接受许可证
+  yes | "${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null 2>&1 || true
+
+  # 安装 SDK 组件
+  "${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager" \
+    "platforms;${TARGET_PLATFORM:-android-34}" \
+    "build-tools;${BUILD_TOOLS_VERSION:-34.0.0}" \
+    "platform-tools"
+fi
+
 exec "$@"
