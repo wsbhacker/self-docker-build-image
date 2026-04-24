@@ -131,6 +131,14 @@ RUN wget https://archive.apache.org/dist/maven/maven-3/${MAVEN_VERSION}/binaries
     rm /tmp/maven.tar.gz
 
 # ==========================================
+# 12.5. 精确安装指定版本的 Gradle (neo 用户)
+# ==========================================
+RUN wget https://services.gradle.org/distributions/gradle-${GRADLE_VERSION}-bin.zip -O /tmp/gradle.zip && \
+    unzip /tmp/gradle.zip -d ~/opt && \
+    mv ~/opt/gradle-${GRADLE_VERSION} ~/opt/gradle && \
+    rm /tmp/gradle.zip
+
+# ==========================================
 # 13. 精确安装指定版本的 Node.js, pnpm 和 yarn (neo 用户)
 # ==========================================
 RUN wget https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.xz -O /tmp/nodejs.tar.xz && \
