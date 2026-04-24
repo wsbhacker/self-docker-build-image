@@ -19,8 +19,9 @@ if [ ! -d "$ZDOTDIR/ohmyzsh" ]; then
   fi
 fi
 
-# 检查并安装 Android SDK
-if [ ! -f "${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager" ]; then
+# 检查并安装 Android SDK（仅当 android_dev 环境变量存在时）
+if [ -n "${android_dev}" ]; then
+  if [ ! -f "${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager" ]; then
   echo "Installing Android SDK..."
 
   # 确保目录权限
@@ -45,6 +46,7 @@ if [ ! -f "${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager" ]; then
     "platforms;${TARGET_PLATFORM:-android-35}" \
     "build-tools;${BUILD_TOOLS_VERSION:-35.0.0}" \
     "platform-tools"
+  fi
 fi
 
 exec "$@"
