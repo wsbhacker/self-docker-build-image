@@ -24,6 +24,7 @@ ARG YARN_VERSION=1.22.22
 ARG NEOVIM_VERSION=0.11.6
 ARG CHEZMOI_VERSION=2.70.0
 ARG OPENSPEC_VERSION=1.2.0
+ARG RIPGREP_VERSION=15.1.0
 ARG USER_UID=1000
 ARG USER_GID=1000
 ARG USERNAME=neo
@@ -50,6 +51,7 @@ ENV NEOVIM_VERSION=${NEOVIM_VERSION}
 ENV CHEZMOI_VERSION=${CHEZMOI_VERSION}
 ENV OPENSPEC_VERSION=${OPENSPEC_VERSION}
 ENV CLAUDE_VERSION=${CLAUDE_VERSION}
+ENV RIPGREP_VERSION=${RIPGREP_VERSION}
 ENV USER_UID=${USER_UID}
 ENV USER_GID=${USER_GID}
 ENV USERNAME=${USERNAME}
@@ -74,7 +76,7 @@ RUN apt-get update && \
     # 安装基础依赖
     apt-get install -y --no-install-recommends \
         software-properties-common curl wget git unzip sudo ca-certificates \
-        build-essential jq ripgrep sqlite3 \
+        build-essential jq sqlite3 \
         zsh tmux && \
     # 清理缓存
     apt-get clean && rm -rf /var/lib/apt/lists/*
@@ -166,6 +168,13 @@ RUN wget https://github.com/neovim/neovim/releases/download/v${NEOVIM_VERSION}/n
 RUN wget https://github.com/twpayne/chezmoi/releases/download/v${CHEZMOI_VERSION}/chezmoi_${CHEZMOI_VERSION}_linux_amd64.tar.gz -O /tmp/chezmoi.tar.gz && \
     tar -xzf /tmp/chezmoi.tar.gz -C ~/.local/bin chezmoi && \
     rm /tmp/chezmoi.tar.gz
+
+# ==========================================
+# 16.5. 精确安装指定版本的 ripgrep (neo 用户)
+# ==========================================
+RUN wget https://github.com/BurntSushi/ripgrep/releases/download/${RIPGREP_VERSION}/ripgrep-${RIPGREP_VERSION}-x86_64-unknown-linux-musl.tar.gz -O /tmp/ripgrep.tar.gz && \
+    tar -xzf /tmp/ripgrep.tar.gz -C ~/.local/bin --strip-components=1 ripgrep-${RIPGREP_VERSION}-x86_64-unknown-linux-musl/rg && \
+    rm /tmp/ripgrep.tar.gz
 
 # ==========================================
 # 17. 为 neo 用户安装 OpenSpec
