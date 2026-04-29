@@ -25,6 +25,7 @@ ARG NEOVIM_VERSION=0.11.6
 ARG CHEZMOI_VERSION=2.70.0
 ARG OPENSPEC_VERSION=1.2.0
 ARG RIPGREP_VERSION=15.1.0
+ARG FD_VERSION=10.4.2
 ARG USER_UID=1000
 ARG USER_GID=1000
 ARG USERNAME=neo
@@ -52,6 +53,7 @@ ENV CHEZMOI_VERSION=${CHEZMOI_VERSION}
 ENV OPENSPEC_VERSION=${OPENSPEC_VERSION}
 ENV CLAUDE_VERSION=${CLAUDE_VERSION}
 ENV RIPGREP_VERSION=${RIPGREP_VERSION}
+ENV FD_VERSION=${FD_VERSION}
 ENV USER_UID=${USER_UID}
 ENV USER_GID=${USER_GID}
 ENV USERNAME=${USERNAME}
@@ -175,6 +177,13 @@ RUN wget https://github.com/twpayne/chezmoi/releases/download/v${CHEZMOI_VERSION
 RUN wget https://github.com/BurntSushi/ripgrep/releases/download/${RIPGREP_VERSION}/ripgrep-${RIPGREP_VERSION}-x86_64-unknown-linux-musl.tar.gz -O /tmp/ripgrep.tar.gz && \
     tar -xzf /tmp/ripgrep.tar.gz -C ~/.local/bin --strip-components=1 ripgrep-${RIPGREP_VERSION}-x86_64-unknown-linux-musl/rg && \
     rm /tmp/ripgrep.tar.gz
+
+# ==========================================
+# 16.6. 精确安装指定版本的 fd (neo 用户)
+# ==========================================
+RUN wget https://github.com/sharkdp/fd/releases/download/v${FD_VERSION}/fd-v${FD_VERSION}-x86_64-unknown-linux-musl.tar.gz -O /tmp/fd.tar.gz && \
+    tar -xzf /tmp/fd.tar.gz -C ~/.local/bin --strip-components=1 fd-v${FD_VERSION}-x86_64-unknown-linux-musl/fd && \
+    rm /tmp/fd.tar.gz
 
 # ==========================================
 # 17. 为 neo 用户安装 OpenSpec
