@@ -1,0 +1,157 @@
+name: Build Fullstack Batch
+
+on:
+  workflow_dispatch:
+    inputs:
+      scenarios:
+        description: "指定场景名称（逗号分隔，如：jdk11-dev,node14-dev），留空则构建全部"
+        required: false
+        default: ""
+        type: string
+
+  push:
+    branches: [main]
+    paths:
+      - "fullstack-image/fullstack.Dockerfile"
+      - ".github/workflows/build-fullstack-batch.yml"
+
+env:
+  REGISTRY: ghcr.io
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.parse.outputs.matrix }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Install yq
+        run: |
+          sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
+          sudo chmod +x /usr/local/bin/yq
+
+      - name: Parse scenarios
+        id: parse
+        run: |
+          set -e
+          # 读取 scenarios.yaml
+          SCENARIOS_FILE="fullstack-image/scenarios.yaml"
+
+          if [ ! -f "$SCENARIOS_FILE" ]; then
+            echo "Error: scenarios.yaml not found"
+            exit 1
+          fi
+
+          # 获取所有场景名称
+          ALL_SCENARIOS=$(yq e '.scenarios | keys | .[]' "$SCENARIOS_FILE")
+
+          # 判断是否指定了场景
+          if [ -n "${{ inputs.scenarios }}" ]; then
+            # 过滤指定场景
+            SELECTED_SCENARIOS="${{ inputs.scenarios }}"
+            IFS=',' read -ra SCENARIO_NAMES <<< "$SELECTED_SCENARIOS"
+
+            # 验证场景是否存在
+            for name in "${SCENARIO_NAMES[@]}"; do
+              name=$(echo "$name" | xargs)  # trim whitespace
+              if ! echo "$ALL_SCENARIOS" | grep -qw "$name"; then
+                echo "Error: Scenario '$name' not defined in scenarios.yaml"
+                exit 1
+              fi
+            done
+
+            SCENARIO_LIST="$SELECTED_SCENARIOS"
+          else
+            # 构建全部场景
+            SCENARIO_LIST=$(echo "$ALL_SCENARIOS" | tr '\n' ',' | sed 's/,$//')
+          fi
+
+          # 构建 JSON 数组输出
+          MATRIX_JSON="[]"
+          IFS=',' read -ra SCENARIOS <<< "$SCENARIO_LIST"
+          for scenario_name in "${SCENARIOS[@]}"; do
+            scenario_name=$(echo "$scenario_name" | xargs)
+
+            # 提取场景配置
+            tag=$(yq e ".scenarios.${scenario_name}.tag" "$SCENARIOS_FILE")
+            description=$(yq e ".scenarios.${scenario_name}.description" "$SCENARIOS_FILE")
+
+            # 提取 build_args 并格式化
+            build_args_json=$(yq e ".scenarios.${scenario_name}.build_args | to_json" "$SCENARIOS_FILE")
+
+            # 构建 JSON 对象
+            SCENARIO_OBJ=$(jq -n \
+              --arg name "$scenario_name" \
+              --arg tag "$tag" \
+              --arg description "$description" \
+              --argjson build_args "$build_args_json" \
+              '{name: $name, tag: $tag, description: $description, build_args: $build_args}')
+
+            MATRIX_JSON=$(echo "$MATRIX_JSON" | jq --argjson obj "$SCENARIO_OBJ" '. += [$obj]')
+          done
+
+          echo "matrix=$(echo "$MATRIX_JSON" | jq -c .)" >> $GITHUB_OUTPUT
+          echo "Scenarios to build:"
+          echo "$MATRIX_JSON" | jq '.[].name'
+
+        shell: bash
+
+  build:
+    needs: prepare
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        scenario: ${{ fromJson(needs.prepare.outputs.matrix) }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v4
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Format build args
+        id: format-args
+        run: |
+          set -e
+          # 将 build_args JSON 转换为多行格式
+          BUILD_ARGS=""
+          for key in $(echo '${{ matrix.scenario.build_args }}' | jq -r 'keys[]'); do
+            value=$(echo '${{ matrix.scenario.build_args }}' | jq -r ".\"$key\"")
+            BUILD_ARGS="${BUILD_ARGS}${key}=${value}"$'\n'
+          done
+          echo "args<<EOF" >> $GITHUB_OUTPUT
+          echo -n "$BUILD_ARGS" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+        shell: bash
+
+      - name: Build and push image
+        uses: docker/build-push-action@v7
+        with:
+          context: ./fullstack-image
+          file: ./fullstack-image/fullstack.Dockerfile
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ github.repository_owner }}/fullstack:${{ matrix.scenario.tag }}
+          build-args: ${{ steps.format-args.outputs.args }}
+          platforms: linux/amd64
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          labels: |
+            org.opencontainers.image.description=${{ matrix.scenario.description }}
+            org.opencontainers.image.title=Fullstack Dev Image - ${{ matrix.scenario.name }}

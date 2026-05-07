@@ -1,0 +1,29 @@
+# Fullstack 镜像场景配置
+# 每个场景定义独立的构建参数组合
+# 新增场景只需添加新条目，无需修改 workflow
+
+scenarios:
+  jdk11-dev:
+    description: "JDK 11 开发环境"
+    tag: jdk11
+    build_args:
+      JDK_VERSION: 11
+
+  node14-dev:
+    description: "Node 14 开发环境"
+    tag: node14
+    build_args:
+      NODE_VERSION: 14
+
+  jdk8-node20:
+    description: "JDK 8 + Node 20 混合环境"
+    tag: jdk8-node20
+    build_args:
+      JDK_VERSION: 8
+      NODE_VERSION: 20
+
+  maven31-dev:
+    description: "Maven 3.1 开发环境"
+    tag: maven31
+    build_args:
+      MAVEN_VERSION: 3.1
