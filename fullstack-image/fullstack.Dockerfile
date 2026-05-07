@@ -27,6 +27,7 @@ ARG OPENSPEC_VERSION=1.2.0
 ARG RIPGREP_VERSION=15.1.0
 ARG FD_VERSION=10.4.2
 ARG FZF_VERSION=0.72.0
+ARG ZOXIDE_VERSION=0.9.9
 ARG USER_UID=1000
 ARG USER_GID=1000
 ARG USERNAME=neo
@@ -56,6 +57,7 @@ ENV CLAUDE_VERSION=${CLAUDE_VERSION}
 ENV RIPGREP_VERSION=${RIPGREP_VERSION}
 ENV FD_VERSION=${FD_VERSION}
 ENV FZF_VERSION=${FZF_VERSION}
+ENV ZOXIDE_VERSION=${ZOXIDE_VERSION}
 ENV USER_UID=${USER_UID}
 ENV USER_GID=${USER_GID}
 ENV USERNAME=${USERNAME}
@@ -193,6 +195,13 @@ RUN wget https://github.com/sharkdp/fd/releases/download/v${FD_VERSION}/fd-v${FD
 RUN wget https://github.com/junegunn/fzf/releases/download/v${FZF_VERSION}/fzf-${FZF_VERSION}-linux_amd64.tar.gz -O /tmp/fzf.tar.gz && \
     tar -xzf /tmp/fzf.tar.gz -C ~/.local/bin && \
     rm /tmp/fzf.tar.gz
+
+# ==========================================
+# 16.8. 精确安装指定版本的 zoxide (neo 用户)
+# ==========================================
+RUN wget https://github.com/ajeetdsouza/zoxide/releases/download/v${ZOXIDE_VERSION}/zoxide-${ZOXIDE_VERSION}-x86_64-unknown-linux-musl.tar.gz -O /tmp/zoxide.tar.gz && \
+    tar -xzf /tmp/zoxide.tar.gz -C ~/.local/bin zoxide && \
+    rm /tmp/zoxide.tar.gz
 
 # ==========================================
 # 17. 为 neo 用户安装 OpenSpec
