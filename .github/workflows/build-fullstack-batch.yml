@@ -75,11 +75,11 @@ jobs:
             scenario_name=$(echo "$scenario_name" | xargs)
 
             # 提取场景配置
-            tag=$(yq e ".scenarios.${scenario_name}.tag" "$SCENARIOS_FILE")
-            description=$(yq e ".scenarios.${scenario_name}.description" "$SCENARIOS_FILE")
+            tag=$(yq e ".scenarios[\"${scenario_name}\"].tag" "$SCENARIOS_FILE")
+            description=$(yq e ".scenarios[\"${scenario_name}\"].description" "$SCENARIOS_FILE")
 
             # 提取 build_args 并格式化
-            build_args_json=$(yq e ".scenarios.${scenario_name}.build_args | to_json" "$SCENARIOS_FILE")
+            build_args_json=$(yq e ".scenarios[\"${scenario_name}\"].build_args | to_json" "$SCENARIOS_FILE")
 
             # 构建 JSON 对象
             SCENARIO_OBJ=$(jq -n \
