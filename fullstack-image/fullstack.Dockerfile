@@ -26,6 +26,7 @@ ARG CHEZMOI_VERSION=2.70.0
 ARG OPENSPEC_VERSION=1.2.0
 ARG RIPGREP_VERSION=15.1.0
 ARG FD_VERSION=10.4.2
+ARG FZF_VERSION=0.72.0
 ARG USER_UID=1000
 ARG USER_GID=1000
 ARG USERNAME=neo
@@ -54,6 +55,7 @@ ENV OPENSPEC_VERSION=${OPENSPEC_VERSION}
 ENV CLAUDE_VERSION=${CLAUDE_VERSION}
 ENV RIPGREP_VERSION=${RIPGREP_VERSION}
 ENV FD_VERSION=${FD_VERSION}
+ENV FZF_VERSION=${FZF_VERSION}
 ENV USER_UID=${USER_UID}
 ENV USER_GID=${USER_GID}
 ENV USERNAME=${USERNAME}
@@ -184,6 +186,13 @@ RUN wget https://github.com/BurntSushi/ripgrep/releases/download/${RIPGREP_VERSI
 RUN wget https://github.com/sharkdp/fd/releases/download/v${FD_VERSION}/fd-v${FD_VERSION}-x86_64-unknown-linux-musl.tar.gz -O /tmp/fd.tar.gz && \
     tar -xzf /tmp/fd.tar.gz -C ~/.local/bin --strip-components=1 fd-v${FD_VERSION}-x86_64-unknown-linux-musl/fd && \
     rm /tmp/fd.tar.gz
+
+# ==========================================
+# 16.7. 精确安装指定版本的 fzf (neo 用户)
+# ==========================================
+RUN wget https://github.com/junegunn/fzf/releases/download/v${FZF_VERSION}/fzf-${FZF_VERSION}-linux_amd64.tar.gz -O /tmp/fzf.tar.gz && \
+    tar -xzf /tmp/fzf.tar.gz -C ~/.local/bin && \
+    rm /tmp/fzf.tar.gz
 
 # ==========================================
 # 17. 为 neo 用户安装 OpenSpec
