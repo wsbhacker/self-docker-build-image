@@ -3,27 +3,30 @@
 # 新增场景只需添加新条目，无需修改 workflow
 
 scenarios:
-  jdk11-dev:
-    description: "JDK 11 开发环境"
-    tag: jdk11
+  android:
+    description: "android开发环境"
+    tag: android
     build_args:
-      JDK_VERSION: 11
+      JDK_VERSION: 21
 
-  node14-dev:
-    description: "Node 14 开发环境"
-    tag: node14
+  web.24:
+    description: "Node 24 开发环境"
+    tag: web.24
     build_args:
-      NODE_VERSION: 14
+      NODE_VERSION: 24.15.0
 
-  jdk8-node20:
-    description: "JDK 8 + Node 20 混合环境"
-    tag: jdk8-node20
-    build_args:
-      JDK_VERSION: 8
-      NODE_VERSION: 20
+  yzj:
+    description: "yzj开发环境"
+    tag: yzj
 
-  maven31-dev:
-    description: "Maven 3.1 开发环境"
-    tag: maven31
+  p:
+    description: "personal开发环境"
+    tag: p
     build_args:
-      MAVEN_VERSION: 3.1
+      JDK_VERSION: 25
+
+  yzj.web:
+    description: "yzj.web开发环境"
+    tag: yzj.web
+    build_args:
+      NODE_VERSION: 14.21.3
