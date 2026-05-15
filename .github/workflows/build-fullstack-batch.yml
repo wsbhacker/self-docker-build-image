@@ -56,7 +56,7 @@ jobs:
             # 验证场景是否存在
             for name in "${SCENARIO_NAMES[@]}"; do
               name=$(echo "$name" | xargs)  # trim whitespace
-              if ! echo "$ALL_SCENARIOS" | grep -qw "$name"; then
+              if ! echo "$ALL_SCENARIOS" | grep -qxF "$name"; then
                 echo "Error: Scenario '$name' not defined in scenarios.yaml"
                 exit 1
               fi
@@ -79,7 +79,7 @@ jobs:
             description=$(yq e ".scenarios[\"${scenario_name}\"].description" "$SCENARIOS_FILE")
 
             # 提取 build_args 并格式化
-            build_args_json=$(yq e ".scenarios[\"${scenario_name}\"].build_args | to_json" "$SCENARIOS_FILE")
+            build_args_json=$(yq e ".scenarios[\"${scenario_name}\"].build_args // {} | to_json" "$SCENARIOS_FILE")
 
             # 构建 JSON 对象
             SCENARIO_OBJ=$(jq -n \
