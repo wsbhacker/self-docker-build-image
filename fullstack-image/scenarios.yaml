@@ -18,6 +18,7 @@ scenarios:
   yzj:
     description: "yzj开发环境"
     tag: yzj
+    build_args: {}
 
   p:
     description: "personal开发环境"

@@ -78,16 +78,17 @@ jobs:
             tag=$(yq e ".scenarios[\"${scenario_name}\"].tag" "$SCENARIOS_FILE")
             description=$(yq e ".scenarios[\"${scenario_name}\"].description" "$SCENARIOS_FILE")
 
-            # 提取 build_args 并格式化
+            # 提取 build_args 并格式化为 KEY=VALUE 字符串
             build_args_json=$(yq e ".scenarios[\"${scenario_name}\"].build_args // {} | to_json" "$SCENARIOS_FILE")
+            build_args_str=$(echo "$build_args_json" | jq -r 'to_entries | map("\(.key)=\(.value)") | join("\n")')
 
             # 构建 JSON 对象
             SCENARIO_OBJ=$(jq -n \
               --arg name "$scenario_name" \
               --arg tag "$tag" \
               --arg description "$description" \
-              --argjson build_args "$build_args_json" \
-              '{name: $name, tag: $tag, description: $description, build_args: $build_args}')
+              --arg build_args_str "$build_args_str" \
+              '{name: $name, tag: $tag, description: $description, build_args_str: $build_args_str}')
 
             MATRIX_JSON=$(echo "$MATRIX_JSON" | jq --argjson obj "$SCENARIO_OBJ" '. += [$obj]')
           done
@@ -129,15 +130,8 @@ jobs:
       - name: Format build args
         id: format-args
         run: |
-          set -e
-          # 将 build_args JSON 转换为多行格式
-          BUILD_ARGS=""
-          for key in $(echo '${{ matrix.scenario.build_args }}' | jq -r 'keys[]'); do
-            value=$(echo '${{ matrix.scenario.build_args }}' | jq -r ".\"$key\"")
-            BUILD_ARGS="${BUILD_ARGS}${key}=${value}"$'\n'
-          done
           echo "args<<EOF" >> $GITHUB_OUTPUT
-          echo -n "$BUILD_ARGS" >> $GITHUB_OUTPUT
+          echo -n "${{ matrix.scenario.build_args_str }}" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
         shell: bash
 
