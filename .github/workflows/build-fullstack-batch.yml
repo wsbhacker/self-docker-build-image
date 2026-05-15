@@ -131,7 +131,7 @@ jobs:
         id: format-args
         run: |
           echo "args<<EOF" >> $GITHUB_OUTPUT
-          echo -n "${{ matrix.scenario.build_args_str }}" >> $GITHUB_OUTPUT
+          echo "${{ matrix.scenario.build_args_str }}" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
         shell: bash
 
