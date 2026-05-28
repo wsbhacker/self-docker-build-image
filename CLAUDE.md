@@ -13,7 +13,7 @@
 | `text-embeddings-inference/` | (手动构建) | 文本嵌入推理，支持 CUDA Blackwell (Rust) |
 | `fish-speech/` | `ghcr.io/{owner}/fish-speech-webui`, `ghcr.io/{owner}/fish-speech-server` | Fish Speech TTS (从上游仓库构建) |
 | `cosyvoice/` | `ghcr.io/{owner}/cosyvoice` | CosyVoice TTS，支持 CUDA Blackwell (从上游仓库构建) |
-| `fullstack-image/` | `ghcr.io/{owner}/fullstack` | 全栈开发环境 + Android SDK (运行时安装) |
+| `fullstack-image/` | `ghcr.io/{owner}/fullstack` | 全栈开发环境 + Android SDK (运行时安装), Git via PPA |
 
 
 ## CI/CD 工作流
