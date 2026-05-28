@@ -82,11 +82,19 @@ RUN apt-get update && \
     # --- 修改：安装 tzdata 并立即配置时区 ---
     apt-get install -y --no-install-recommends tzdata && \
     ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone && \
-    # 安装基础依赖
+    # 安装 software-properties-common（提供 add-apt-repository）
+    apt-get install -y --no-install-recommends software-properties-common && \
+    # 添加 git-core PPA 以获取最新版 git
+    add-apt-repository ppa:git-core/ppa && \
+    apt-get update && \
+    # 安装基础依赖（git 将从 PPA 获取最新版）
     apt-get install -y --no-install-recommends \
-        software-properties-common curl wget git unzip sudo ca-certificates \
+        curl wget git unzip sudo ca-certificates \
         build-essential jq sqlite3 \
         zsh tmux && \
+    # 清理 PPA 引导依赖（software-properties-common 及其自动安装的依赖）
+    apt-get remove -y software-properties-common && \
+    apt-get autoremove -y && \
     # 清理缓存
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
