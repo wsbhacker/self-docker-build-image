@@ -117,6 +117,9 @@ RUN set -eux; \
         groupdel "$existing_group" || true; \
     fi; \
     \
+    # 清理可能被 root 创建的 /home/neo 目录，确保 useradd -m 干净创建; \
+    rm -rf /home/${USERNAME}; \
+    \
     groupadd -g ${USER_GID} ${USERNAME}; \
     useradd -m -s /bin/zsh -u ${USER_UID} -g ${USER_GID} ${USERNAME}; \
     \
