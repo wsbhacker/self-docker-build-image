@@ -127,6 +127,10 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
 
+      - name: Set build timestamp
+        id: timestamp
+        run: echo "value=$(date '+%Y-%m-%d %H:%M:%S')" >> $GITHUB_OUTPUT
+
       - name: Format build args
         id: format-args
         run: |
@@ -142,7 +146,10 @@ jobs:
           file: ./fullstack-image/fullstack.Dockerfile
           push: true
           tags: ${{ env.REGISTRY }}/${{ github.repository_owner }}/fullstack:${{ matrix.scenario.tag }}
-          build-args: ${{ steps.format-args.outputs.args }}
+          build-args: |
+            IMAGE_TAG=${{ matrix.scenario.tag }}
+            BUILD_TIMESTAMP=${{ steps.timestamp.outputs.value }}
+            ${{ steps.format-args.outputs.args }}
           platforms: linux/amd64
           cache-from: type=gha
           cache-to: type=gha,mode=max
