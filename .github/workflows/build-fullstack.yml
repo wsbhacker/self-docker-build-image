@@ -58,6 +58,20 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
 
+      - name: Set build timestamp
+        id: timestamp
+        run: echo "value=$(date '+%Y-%m-%d %H:%M:%S')" >> $GITHUB_OUTPUT
+
+      - name: Set image tag
+        id: image-tag
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            TAG="${{ inputs.version_tag }}"
+          else
+            TAG="fullstack"
+          fi
+          echo "value=${TAG}" >> $GITHUB_OUTPUT
+
       - name: Parse build args
         id: parse-args
         run: |
@@ -95,6 +109,9 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           platforms: linux/amd64
-          build-args: ${{ steps.parse-args.outputs.args }}
+          build-args: |
+            IMAGE_TAG=${{ steps.image-tag.outputs.value }}
+            BUILD_TIMESTAMP=${{ steps.timestamp.outputs.value }}
+            ${{ steps.parse-args.outputs.args }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
