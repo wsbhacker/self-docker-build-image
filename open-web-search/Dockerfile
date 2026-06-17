@@ -27,12 +27,10 @@ RUN addgroup -g 1001 -S nodejs && \
 
 # 更改文件所有权
 RUN chown -R nodejs:nodejs /app
-
 USER nodejs
 
 # 设置环境变量
 ENV NODE_ENV=production
-
 # 默认端口设置，可被部署环境覆盖
 ENV PORT=3000
 
@@ -41,3 +39,4 @@ EXPOSE ${PORT}
 
 # 启动命令
 CMD ["node", "build/index.js"]
+
