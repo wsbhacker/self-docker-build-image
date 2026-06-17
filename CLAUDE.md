@@ -14,6 +14,7 @@
 | `fish-speech/` | `ghcr.io/{owner}/fish-speech-webui`, `ghcr.io/{owner}/fish-speech-server` | Fish Speech TTS (从上游仓库构建) |
 | `cosyvoice/` | `ghcr.io/{owner}/cosyvoice` | CosyVoice TTS，支持 CUDA Blackwell (从上游仓库构建) |
 | `fullstack-image/` | `ghcr.io/{owner}/fullstack` | 全栈开发环境 + Android SDK (运行时安装), Git via PPA |
+| `glm-coding-grabber/` | `ghcr.io/{owner}/glm-coding-grabber` | GLM Coding CAPTCHA 识别服务 (从上游仓库构建) |
 
 
 ## CI/CD 工作流
@@ -36,6 +37,7 @@
 - `.github/workflows/build-litellm-pgvector.yml` - LiteLLM PGVector
 - `.github/workflows/build-fish-speech.yml` - Fish Speech (webui + server)
 - `.github/workflows/build-cosyvoice.yml` - CosyVoice TTS
+- `.github/workflows/build-glm-coding-grabber.yml` - GLM Coding CAPTCHA 识别服务
 
 ### 工作流模式
 

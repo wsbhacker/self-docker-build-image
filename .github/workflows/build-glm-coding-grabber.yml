@@ -1,0 +1,68 @@
+name: Build glm-coding-grabber Image
+
+on:
+  # 1. 手动触发配置
+  workflow_dispatch:
+    inputs:
+      version_tag:
+        description: "设定镜像 Tag (例如: v1.0.0 或 latest)"
+        required: false
+        default: "latest"
+        type: string
+
+  # 2. 修改触发配置
+  push:
+    branches:
+      - main
+    paths:
+      - "glm-coding-grabber/**"
+      - ".github/workflows/build-glm-coding-grabber.yml"
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository_owner }}/glm-coding-grabber
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v4
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=${{ inputs.version_tag }},enable=${{ github.event_name == 'workflow_dispatch' }}
+            type=raw,value=latest,enable=${{ github.event_name == 'push' }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v7
+        with:
+          context: ./glm-coding-grabber
+          file: ./glm-coding-grabber/glm-coding-grabber.Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          platforms: linux/amd64
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
