@@ -14,7 +14,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     fonts-wqy-zenhei \
     fonts-wqy-microhei \
     fonts-noto-cjk \
-    fonts-source-han-sans-cn \
     fonts-arphic-uming \
     fonts-arphic-ukai \
     && rm -rf /var/lib/apt/lists/*
