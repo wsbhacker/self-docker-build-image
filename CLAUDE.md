@@ -15,6 +15,7 @@
 | `cosyvoice/` | `ghcr.io/{owner}/cosyvoice` | CosyVoice TTS，支持 CUDA Blackwell (从上游仓库构建) |
 | `fullstack-image/` | `ghcr.io/{owner}/fullstack` | 全栈开发环境 + Android SDK (运行时安装), Git via PPA |
 | `glm-coding-grabber/` | `ghcr.io/{owner}/glm-coding-grabber` | GLM Coding CAPTCHA 识别服务 (从上游仓库构建) |
+| `open-web-search/` | `ghcr.io/{owner}/open-web-search` | Open WebSearch MCP 服务器 (从上游仓库构建, 手动维护 Dockerfile) |
 
 
 ## CI/CD 工作流
@@ -38,6 +39,7 @@
 - `.github/workflows/build-fish-speech.yml` - Fish Speech (webui + server)
 - `.github/workflows/build-cosyvoice.yml` - CosyVoice TTS
 - `.github/workflows/build-glm-coding-grabber.yml` - GLM Coding CAPTCHA 识别服务
+- `.github/workflows/build-open-web-search.yml` - Open WebSearch MCP 服务器
 
 ### 工作流模式
 
