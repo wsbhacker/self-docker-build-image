@@ -39,4 +39,3 @@ EXPOSE ${PORT}
 
 # 启动命令
 CMD ["node", "build/index.js"]
-
