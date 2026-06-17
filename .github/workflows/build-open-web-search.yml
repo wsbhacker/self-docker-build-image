@@ -33,9 +33,9 @@ jobs:
         run: |
           UPSTREAM_URL="https://raw.githubusercontent.com/Aas-ee/open-webSearch/${{ inputs.version_tag || 'v2.1.11' }}/Dockerfile"
           curl -sL "$UPSTREAM_URL" -o /tmp/upstream.Dockerfile
-          if ! diff -q ./open-web-search/Dockerfile /tmp/upstream.Dockerfile > /dev/null 2>&1; then
+          if ! diff ./open-web-search/Dockerfile /tmp/upstream.Dockerfile; then
+            echo ""
             echo "::error::⚠️ 上游 Dockerfile 已变更，请检查并更新本地副本"
-            diff ./open-web-search/Dockerfile /tmp/upstream.Dockerfile || true
             exit 1
           fi
           echo "✅ Dockerfile 与上游一致"
