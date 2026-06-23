@@ -236,7 +236,15 @@ RUN ~/.local/node/bin/npm install -g @fission-ai/openspec@${OPENSPEC_VERSION}
 RUN curl -fsSL https://claude.ai/install.sh | bash -s -- ${CLAUDE_VERSION}
 
 # ==========================================
-# 19. 添加 entrypoint（处理 ZDOTDIR + Oh My Zsh）
+# 19. 为 neo 用户安装 Codex CLI
+# ==========================================
+ARG CODEX_VERSION=latest
+ENV CODEX_RELEASE=${CODEX_VERSION}
+ENV CODEX_NON_INTERACTIVE=true
+RUN curl -fsSL https://chatgpt.com/codex/install.sh | sh
+
+# ==========================================
+# 20. 添加 entrypoint（处理 ZDOTDIR + Oh My Zsh）
 # ==========================================
 USER root
 COPY entrypoint.sh /entrypoint.sh
