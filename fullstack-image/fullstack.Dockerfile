@@ -98,7 +98,7 @@ RUN apt-get update && \
     # 安装基础依赖（git 将从 PPA 获取最新版）
     apt-get install -y --no-install-recommends \
         curl wget git unzip sudo ca-certificates \
-        build-essential jq sqlite3 \
+        build-essential jq sqlite3 netcat-openbsd \
         zsh tmux && \
     # 清理 PPA 引导依赖（software-properties-common 及其自动安装的依赖）
     apt-get remove -y software-properties-common && \
