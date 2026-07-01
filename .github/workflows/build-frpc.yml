@@ -15,7 +15,7 @@ on:
     branches:
       - main # 或者 master，根据你的主分支名字修改
     paths:
-      - "frpc/**" # 只有当 frp 文件夹内的文件发生变化时才触发
+      - "frp/Frpc.Dockerfile" # 只有当 FRPc Dockerfile 发生变化时才触发
       - ".github/workflows/build-frpc.yml" # 或者是修改了这个流水线文件本身
 
 env:
