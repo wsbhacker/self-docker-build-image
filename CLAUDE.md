@@ -17,6 +17,7 @@
 | `glm-coding-grabber/` | `ghcr.io/{owner}/glm-coding-grabber` | GLM Coding CAPTCHA 识别服务 (从上游仓库构建) |
 | `open-web-search/` | `ghcr.io/{owner}/open-web-search` | Open WebSearch MCP 服务器 (从上游仓库构建, 手动维护 Dockerfile) |
 | `trading-agents/` | `ghcr.io/{owner}/trading-agents` | TradingAgents 多智能体交易分析框架 (从上游仓库构建, 常驻交互式 CLI) |
+| `pg-ocs-sync-worker/` | `ghcr.io/{owner}/pg-ddl-sync` | PostgreSQL DDL 同步伴生服务 (Python) |
 
 
 ## CI/CD 工作流
@@ -42,6 +43,7 @@
 - `.github/workflows/build-glm-coding-grabber.yml` - GLM Coding CAPTCHA 识别服务
 - `.github/workflows/build-open-web-search.yml` - Open WebSearch MCP 服务器
 - `.github/workflows/build-trading-agents.yml` - TradingAgents 交易分析框架
+- `.github/workflows/build-pg-ddl-sync.yml` - PostgreSQL DDL 同步伴生服务
 
 ### 工作流模式
 
