@@ -44,6 +44,7 @@
 - `.github/workflows/build-open-web-search.yml` - Open WebSearch MCP 服务器
 - `.github/workflows/build-trading-agents.yml` - TradingAgents 交易分析框架
 - `.github/workflows/build-pg-ddl-sync.yml` - PostgreSQL DDL 同步伴生服务
+- `.github/workflows/check-fullstack-updates.yml` - Fullstack CLI 版本更新检测
 
 ### 工作流模式
 
