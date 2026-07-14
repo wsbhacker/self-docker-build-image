@@ -80,6 +80,14 @@ jobs:
 
           echo "need_rebuild=false" >> $GITHUB_OUTPUT
 
+      - name: Log result
+        run: |
+          if [ "${{ steps.check.outputs.need_rebuild }}" = "true" ]; then
+            echo "🔨 需要重建: ${{ steps.check.outputs.reason }}"
+          else
+            echo "✅ 所有镜像均为最新，无需重建"
+          fi
+
       - name: Trigger batch rebuild
         if: steps.check.outputs.need_rebuild == 'true'
         env:
