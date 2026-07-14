@@ -23,11 +23,12 @@ jobs:
 
       - name: Get latest release timestamps
         id: releases
+        env:
+          GH_TOKEN: ""      # 外部公共 repo 用空 token 做未认证请求
         run: |
-          # GITHUB_TOKEN 仅限当前仓库，外部公共 repo 用空 token 做未认证请求
-          CLAUDE_TIME=$(GH_TOKEN="" gh api repos/anthropics/claude-code/releases/latest \
+          CLAUDE_TIME=$(gh api repos/anthropics/claude-code/releases/latest \
             --jq '.published_at')
-          CODEX_TIME=$(GH_TOKEN="" gh api repos/openai/codex/releases/latest \
+          CODEX_TIME=$(gh api repos/openai/codex/releases/latest \
             --jq '.published_at')
 
           CLAUDE_TS=$(date -d "$CLAUDE_TIME" +%s)
