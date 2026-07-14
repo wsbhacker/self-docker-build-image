@@ -24,9 +24,10 @@ jobs:
       - name: Get latest release timestamps
         id: releases
         run: |
-          CLAUDE_TIME=$(gh api repos/anthropics/claude-code/releases/latest \
+          # GITHUB_TOKEN 仅限当前仓库，外部公共 repo 用空 token 做未认证请求
+          CLAUDE_TIME=$(GH_TOKEN="" gh api repos/anthropics/claude-code/releases/latest \
             --jq '.published_at')
-          CODEX_TIME=$(gh api repos/openai/codex/releases/latest \
+          CODEX_TIME=$(GH_TOKEN="" gh api repos/openai/codex/releases/latest \
             --jq '.published_at')
 
           CLAUDE_TS=$(date -d "$CLAUDE_TIME" +%s)
@@ -45,9 +46,17 @@ jobs:
           OWNER=${{ github.repository_owner }}
 
           TAGS=$(yq '.scenarios.[].tag' fullstack-image/scenarios.yaml)
+          if [ -z "$TAGS" ]; then
+            echo "错误: scenarios.yaml 中没有找到任何 tag 或解析失败" >&2
+            exit 1
+          fi
 
           VERSIONS=$(gh api "/users/${OWNER}/packages/container/fullstack/versions" \
-            --paginate 2>/dev/null | jq -s 'add' 2>/dev/null || echo "[]")
+            --paginate 2>/tmp/ghcr-err.log | jq -s 'add' 2>/dev/null || echo "[]")
+          if [ -s /tmp/ghcr-err.log ]; then
+            echo "警告: GHCR API 查询出错:" >&2
+            cat /tmp/ghcr-err.log >&2
+          fi
 
           for TAG in $TAGS; do
             TAG_TIME=$(echo "$VERSIONS" | \
