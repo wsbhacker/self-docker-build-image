@@ -82,19 +82,19 @@ CMD ["gunicorn", "--bind", "0.0.0.0:8080", "main:app", "-k", "uvicorn.workers.Uv
 2. checkout akfamily/aktools @ ${{ aktools_version }}
    → 源码放入构建上下文（aktools/ 目录下）
 
-3. 解析 requirements.txt → 提取 akshare 版本号
+3. 设置 QEMU + Buildx（多架构支持）
 
-4. docker build
+4. 解析 requirements.txt → 提取 akshare 版本号
+
+5. docker build + push
    -f aktools/Aktools.Dockerfile
    -t ghcr.io/{owner}/aktools:<aktools_version>-share-<akshare_version>
-   aktools/
-
-5. docker push
+   --platform linux/amd64,linux/arm64
 ```
 
 ### 架构
 
-单架构 `linux/amd64`。上游镜像为单一架构，保持一致。
+多架构 `linux/amd64,linux/arm64`。使用 `docker/setup-qemu-action` + `docker/setup-buildx-action`，与本仓库其他 workflow 一致。
 
 ### 权限
 
@@ -120,5 +120,4 @@ permissions:
 
 - 定时自动检测 akshare/aktools 新版本
 - 镜像健康检查/测试（CLAUDE.md 明确不进行本地测试）
-- 多架构构建
 - push 自动触发
