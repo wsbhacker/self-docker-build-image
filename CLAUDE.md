@@ -8,6 +8,7 @@
 | 目录 | 镜像名称 | 说明 |
 |------|---------|------|
 | `anki/` | `ghcr.io/{owner}/ankis` | Anki 同步服务器 (Python) |
+| `aktools/` | `ghcr.io/{owner}/aktools` | AKTools HTTP API 服务（从上游源码构建，自定义依赖管理） |
 | `frp/` | `ghcr.io/{owner}/frpc`, `ghcr.io/{owner}/frps` | FRP 客户端和服务端 |
 | `litellm-pgvector/` | `ghcr.io/{owner}/litellm-pgvector` | LiteLLM 与 PGVector 支持 |
 | `text-embeddings-inference/` | (手动构建) | 文本嵌入推理，支持 CUDA Blackwell (Rust) |
