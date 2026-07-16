@@ -1,0 +1,67 @@
+name: Build aktools Image
+
+on:
+  workflow_dispatch:
+    inputs:
+      aktools_version:
+        description: "AKTools 上游 Tag（如 v0.0.91 或 0.0.91）"
+        required: true
+        type: string
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository_owner }}/aktools
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout self-docker-build-image（获取构建文件）
+        uses: actions/checkout@v6
+
+      - name: Checkout akfamily/aktools 源码
+        uses: actions/checkout@v6
+        with:
+          repository: akfamily/aktools
+          ref: ${{ inputs.aktools_version }}
+          path: aktools/aktools-src
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v4
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Parse versions and construct tag
+        id: versions
+        run: |
+          AKTOOLS_VER=$(echo "${{ inputs.aktools_version }}" | sed 's/^v//')
+          AKSHARE_VER=$(grep -oP 'akshare==\K[^\s]+' aktools/requirements.txt)
+          TAG="${AKTOOLS_VER}-share-${AKSHARE_VER}"
+          echo "aktools_version=${AKTOOLS_VER}" >> $GITHUB_OUTPUT
+          echo "akshare_version=${AKSHARE_VER}" >> $GITHUB_OUTPUT
+          echo "tag=${TAG}" >> $GITHUB_OUTPUT
+          echo "Resolved tag: $TAG"
+
+      - name: Build and push
+        uses: docker/build-push-action@v7
+        with:
+          context: ./aktools
+          file: ./aktools/Aktools.Dockerfile
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.versions.outputs.tag }}
+          platforms: linux/amd64,linux/arm64
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
