@@ -18,8 +18,6 @@
 | `open-web-search/` | `ghcr.io/{owner}/open-web-search` | Open WebSearch MCP 服务器 (从上游仓库构建, 手动维护 Dockerfile) |
 | `trading-agents/` | `ghcr.io/{owner}/trading-agents` | TradingAgents 多智能体交易分析框架 (从上游仓库构建, 常驻交互式 CLI) |
 | `pg-ocs-sync-worker/` | `ghcr.io/{owner}/pg-ddl-sync` | PostgreSQL DDL 同步伴生服务 (Python) |
-| `aktools/` | `ghcr.io/{owner}/aktools` | AKTools 金融数据 API 服务 — 包装上游 aktools 镜像 (从阿里云), 支持独立 AKShare 版本升级 |
-
 
 ## CI/CD 工作流
 
