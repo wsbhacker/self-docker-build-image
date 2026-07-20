@@ -25,18 +25,30 @@ jobs:
         id: releases
         run: |
           # 外部公开 repo 用 curl 无需认证
-          CLAUDE_TIME=$(curl -sS https://api.github.com/repos/anthropics/claude-code/releases/latest \
-            | jq -r '.published_at')
-          CODEX_TIME=$(curl -sS https://api.github.com/repos/openai/codex/releases/latest \
-            | jq -r '.published_at')
+          # [诊断] 同时抓 HTTP 状态码与 body,便于判断是否被限流(null=限流或无 release)
+          CLAUDE_HTTP=$(curl -sS -o /tmp/claude.json -w '%{http_code}' \
+            https://api.github.com/repos/anthropics/claude-code/releases/latest)
+          CLAUDE_TIME=$(jq -r '.published_at' /tmp/claude.json)
+          CODEX_HTTP=$(curl -sS -o /tmp/codex.json -w '%{http_code}' \
+            https://api.github.com/repos/openai/codex/releases/latest)
+          CODEX_TIME=$(jq -r '.published_at' /tmp/codex.json)
+
+          echo "::group::🔍 [诊断] 上游 release 探测"
+          echo "claude-code: http=$CLAUDE_HTTP  published_at=[$CLAUDE_TIME]"
+          echo "codex      : http=$CODEX_HTTP  published_at=[$CODEX_TIME]"
+          echo "claude body 前 200 字: $(head -c 200 /tmp/claude.json)"
+          echo "codex  body 前 200 字: $(head -c 200 /tmp/codex.json)"
+          echo "::endgroup::"
 
           CLAUDE_TS=$(date -d "$CLAUDE_TIME" +%s)
           CODEX_TS=$(date -d "$CODEX_TIME" +%s)
 
           if [ "$CLAUDE_TS" -gt "$CODEX_TS" ]; then
             echo "latest_ts=$CLAUDE_TS" >> $GITHUB_OUTPUT
+            echo "[诊断] latest_ts=claude($CLAUDE_TS) = $(date -d "@$CLAUDE_TS" '+%Y-%m-%d %H:%M:%S UTC' 2>/dev/null)"
           else
             echo "latest_ts=$CODEX_TS" >> $GITHUB_OUTPUT
+            echo "[诊断] latest_ts=codex($CODEX_TS) = $(date -d "@$CODEX_TS" '+%Y-%m-%d %H:%M:%S UTC' 2>/dev/null)"
           fi
 
       - name: Check if rebuild needed
@@ -60,25 +72,39 @@ jobs:
             cat /tmp/ghcr-err.log >&2
           fi
 
+          echo "::group::🔍 [诊断] 重建判定输入"
+          LATEST_HUMAN=$(date -d "@$LATEST_TS" '+%Y-%m-%d %H:%M:%S UTC' 2>/dev/null \
+            || echo "(LATEST_TS=[$LATEST_TS] 为空或非数字,解析失败)")
+          echo "LATEST_TS(上游最新发布)=[$LATEST_TS] = $LATEST_HUMAN"
+          echo "GHCR VERSIONS 条数=$(echo "$VERSIONS" | jq 'length' 2>/dev/null)"
+          echo "scenarios TAGS=$(echo "$TAGS" | tr '\n' ' ')"
+          echo "::endgroup::"
+
           for TAG in $TAGS; do
             TAG_TIME=$(echo "$VERSIONS" | \
               jq -r "[.[] | select(.metadata.container.tags[]? == \"$TAG\")] | first | .created_at // \"never\"")
 
             if [ "$TAG_TIME" = "never" ]; then
+              echo "[诊断] tag=[$TAG] → 从未构建(应重建)"
               echo "need_rebuild=true" >> $GITHUB_OUTPUT
               echo "reason=$TAG 从未构建过" >> $GITHUB_OUTPUT
               exit 0
             fi
 
             TAG_TS=$(date -d "$TAG_TIME" +%s)
+            TAG_HUMAN=$(date -d "@$TAG_TS" '+%Y-%m-%d %H:%M:%S UTC' 2>/dev/null || echo "(解析失败)")
             if [ "$TAG_TS" -lt "$LATEST_TS" ]; then
+              echo "[诊断] tag=[$TAG] created_at=$TAG_TIME($TAG_HUMAN) ts=$TAG_TS < latest_ts=$LATEST_TS → 旧,触发重建"
               echo "need_rebuild=true" >> $GITHUB_OUTPUT
               echo "reason=$TAG 版本过旧(构建于 $TAG_TIME)" >> $GITHUB_OUTPUT
               exit 0
+            else
+              echo "[诊断] tag=[$TAG] created_at=$TAG_TIME($TAG_HUMAN) ts=$TAG_TS >= latest_ts=$LATEST_TS → 新,跳过"
             fi
           done
 
           echo "need_rebuild=false" >> $GITHUB_OUTPUT
+          echo "[诊断] 所有 tag 均不旧于 latest_ts,判定无需重建"
 
       - name: Log result
         run: |
