@@ -288,7 +288,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>"
 
 ---
 
-### Task 4: 推送、触发 CI 并验证产物（需用户确认）
+### Task 4: 触发 CI 并验证产物（用户自行推送后参考执行）
 
 **Files:** 无新增/修改（纯验证与交付）
 
@@ -296,20 +296,9 @@ Co-Authored-By: Claude <noreply@anthropic.com>"
 - Consumes: Task 1–3 的全部提交（当前分支 `brave-mcp`）
 - Produces: ghcr.io 上可拉取的 `ghcr.io/{owner}/brave-search:v2.1.0` 双架构镜像
 
-> ⚠️ 本任务涉及 push / PR / 触发 CI，**执行前须用户确认**。遵循仓库约定不做本地 docker 测试，以 CI 绿色为验收标准。
+> ℹ️ 分支 push 与 merge 由用户自行完成，**不在本计划执行范围内**。本任务命令供用户推送/合入后参考。遵循仓库约定不做本地 docker 测试，以 CI 绿色为验收标准。
 
-- [ ] **Step 1: 推送分支并创建 PR（用户确认后）**
-
-Run:
-```bash
-git push -u origin brave-mcp
-gh pr create --title "feat: 新增 brave-search MCP 镜像构建（上游 tag 检出 + 双架构）" \
-  --body "基于 brave/brave-search-mcp-server 构建 ghcr.io/{owner}/brave-search。设计文档：docs/superpowers/specs/2026-07-22-brave-search-mcp-build-design.md"
-```
-
-Expected: 输出 PR URL。
-
-- [ ] **Step 2: PR 合入 main 后，手动触发构建（默认 v2.1.0）**
+- [ ] **Step 1: 合入 main 后，手动触发构建（默认 v2.1.0）**
 
 Run:
 ```bash
@@ -320,7 +309,7 @@ gh run list --workflow=build-brave-search.yml --limit 1
 
 Expected: 列出刚触发的 run，状态为 `queued`/`in_progress`。
 
-- [ ] **Step 3: 等待工作流完成并确认绿色**
+- [ ] **Step 2: 等待工作流完成并确认绿色**
 
 Run:
 ```bash
@@ -329,7 +318,7 @@ gh run watch --exit-status
 
 Expected: 所有步骤成功，退出码 0（`Check upstream Dockerfile changes` 步骤输出 `✅ Dockerfile 与上游一致`）。
 
-- [ ] **Step 4: 验证镜像已推送至 ghcr（双架构）**
+- [ ] **Step 3: 验证镜像已推送至 ghcr（双架构）**
 
 Run:
 ```bash
@@ -339,7 +328,7 @@ gh api "/users/$OWNER/packages/container/brave-search/versions" --jq '.[].metada
 
 Expected: 输出包含 `v2.1.0`。如需验证双架构 manifest（本机有 docker 且已 ghcr 登录时，可选）：`docker manifest inspect ghcr.io/$OWNER/brave-search:v2.1.0 | grep -c '"architecture"'` 预期为 2（amd64 + arm64）。
 
-- [ ] **Step 5: 告知用户部署验证方式（不在仓库内测试）**
+- [ ] **Step 4: 告知用户部署验证方式（不在仓库内测试）**
 
 向用户说明运行时验证命令（用户在自己的部署环境执行）：
 
