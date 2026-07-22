@@ -31,6 +31,8 @@ ARG RIPGREP_VERSION=15.1.0
 ARG FD_VERSION=10.4.2
 ARG FZF_VERSION=0.72.0
 ARG ZOXIDE_VERSION=0.9.9
+ARG RUST_VERSION=1.97.1
+ARG RUSTUP_VERSION=1.29.0
 ARG USER_UID=1000
 ARG USER_GID=1000
 ARG USERNAME=neo
@@ -64,6 +66,8 @@ ENV RIPGREP_VERSION=${RIPGREP_VERSION}
 ENV FD_VERSION=${FD_VERSION}
 ENV FZF_VERSION=${FZF_VERSION}
 ENV ZOXIDE_VERSION=${ZOXIDE_VERSION}
+ENV RUST_VERSION=${RUST_VERSION}
+ENV RUSTUP_VERSION=${RUSTUP_VERSION}
 ENV USER_UID=${USER_UID}
 ENV USER_GID=${USER_GID}
 ENV USERNAME=${USERNAME}
@@ -81,7 +85,7 @@ ENV CTAG=${IMAGE_TAG}
 ENV CID=${IMAGE_TAG}:${BUILD_TIMESTAMP}
 
 # 配置全局 PATH，确保所有手动安装的二进制文件随时可用
-ENV PATH="/home/${USERNAME}/.local/bin:/home/${USERNAME}/.local/node/bin:/home/${USERNAME}/opt/maven/bin:/home/${USERNAME}/opt/gradle/bin:/home/${USERNAME}/opt/nvim/bin:${ANDROID_HOME}/cmdline-tools/latest/bin:${ANDROID_HOME}/platform-tools:${PATH}"
+ENV PATH="/home/${USERNAME}/.cargo/bin:/home/${USERNAME}/.local/bin:/home/${USERNAME}/.local/node/bin:/home/${USERNAME}/opt/maven/bin:/home/${USERNAME}/opt/gradle/bin:/home/${USERNAME}/opt/nvim/bin:${ANDROID_HOME}/cmdline-tools/latest/bin:${ANDROID_HOME}/platform-tools:${PATH}"
 
 # ==========================================
 # 2. 安装系统基础工具、配置时区及 Python
@@ -224,6 +228,22 @@ RUN wget https://github.com/junegunn/fzf/releases/download/v${FZF_VERSION}/fzf-$
 RUN wget https://github.com/ajeetdsouza/zoxide/releases/download/v${ZOXIDE_VERSION}/zoxide-${ZOXIDE_VERSION}-x86_64-unknown-linux-musl.tar.gz -O /tmp/zoxide.tar.gz && \
     tar -xzf /tmp/zoxide.tar.gz -C ~/.local/bin zoxide && \
     rm /tmp/zoxide.tar.gz
+
+# ==========================================
+# 16.9. 精确安装指定版本的 Rust 工具链 (neo 用户)
+# rustup 本体与 Rust 工具链双锁版本
+# rustup-init 来自官方版本归档 (static.rust-lang.org/rustup/archive/)
+# default profile (rustc/cargo/rust-std/rustfmt/clippy/rust-docs) + rust-src + rust-analyzer
+# 不使用 complete profile，避免 miri/rustc-dev/llvm-tools 等数百 MB 编译器内部组件
+# ==========================================
+RUN curl -fsSL https://static.rust-lang.org/rustup/archive/${RUSTUP_VERSION}/x86_64-unknown-linux-gnu/rustup-init -o /tmp/rustup-init && \
+    chmod +x /tmp/rustup-init && \
+    /tmp/rustup-init -y \
+        --no-modify-path \
+        --profile default \
+        --default-toolchain ${RUST_VERSION} && \
+    rm /tmp/rustup-init && \
+    ~/.cargo/bin/rustup component add rust-src rust-analyzer
 
 # ==========================================
 # 17. 为 neo 用户安装 OpenSpec
