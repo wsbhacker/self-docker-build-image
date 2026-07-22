@@ -110,6 +110,16 @@ RUN apt-get update && \
     # 清理缓存
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
+# ==========================================
+# 2.5. 安装 Tauri 桌面开发系统依赖 (root)
+# webkit2gtk-4.1 为 Ubuntu 24.04 提供的版本，Tauri v2 所需
+# ==========================================
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        pkg-config file libssl-dev libxdo-dev \
+        libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
 # ===== Python multi-stage copy =====
 COPY --from=python /usr/local /usr/local
 
