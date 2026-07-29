@@ -31,6 +31,7 @@ ARG RIPGREP_VERSION=15.1.0
 ARG FD_VERSION=10.4.2
 ARG FZF_VERSION=0.72.0
 ARG ZOXIDE_VERSION=0.9.9
+ARG GITLEAKS_VERSION=8.30.1
 ARG RUST_VERSION=1.97.1
 ARG RUSTUP_VERSION=1.29.0
 ARG USER_UID=1000
@@ -66,6 +67,7 @@ ENV RIPGREP_VERSION=${RIPGREP_VERSION}
 ENV FD_VERSION=${FD_VERSION}
 ENV FZF_VERSION=${FZF_VERSION}
 ENV ZOXIDE_VERSION=${ZOXIDE_VERSION}
+ENV GITLEAKS_VERSION=${GITLEAKS_VERSION}
 ENV RUST_VERSION=${RUST_VERSION}
 ENV RUSTUP_VERSION=${RUSTUP_VERSION}
 ENV USER_UID=${USER_UID}
@@ -238,6 +240,16 @@ RUN wget https://github.com/junegunn/fzf/releases/download/v${FZF_VERSION}/fzf-$
 RUN wget https://github.com/ajeetdsouza/zoxide/releases/download/v${ZOXIDE_VERSION}/zoxide-${ZOXIDE_VERSION}-x86_64-unknown-linux-musl.tar.gz -O /tmp/zoxide.tar.gz && \
     tar -xzf /tmp/zoxide.tar.gz -C ~/.local/bin zoxide && \
     rm /tmp/zoxide.tar.gz
+
+# ==========================================
+# 16.8.1. 精确安装指定版本的 gitleaks (neo 用户)
+# ==========================================
+RUN wget https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz -O /tmp/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz && \
+    wget https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_checksums.txt -O /tmp/gitleaks_checksums.txt && \
+    grep "gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" /tmp/gitleaks_checksums.txt | (cd /tmp && sha256sum -c -) && \
+    tar -xzf /tmp/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz -C ~/.local/bin gitleaks && \
+    rm /tmp/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz /tmp/gitleaks_checksums.txt && \
+    gitleaks version
 
 # ==========================================
 # 16.9. 精确安装指定版本的 Rust 工具链 (neo 用户)
