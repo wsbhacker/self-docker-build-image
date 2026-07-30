@@ -14,7 +14,7 @@
 | `text-embeddings-inference/` | (手动构建) | 文本嵌入推理，支持 CUDA Blackwell (Rust) |
 | `fish-speech/` | `ghcr.io/{owner}/fish-speech-webui`, `ghcr.io/{owner}/fish-speech-server` | Fish Speech TTS (从上游仓库构建) |
 | `cosyvoice/` | `ghcr.io/{owner}/cosyvoice` | CosyVoice TTS，支持 CUDA Blackwell (从上游仓库构建) |
-| `fullstack-image/` | `ghcr.io/{owner}/fullstack` | 全栈开发环境 + Android SDK (运行时安装) + Rust/Tauri 编译环境 (固定版本), Git via PPA |
+| `fullstack-image/` | `ghcr.io/{owner}/fullstack` | 全栈开发环境 + Android SDK (运行时安装) + Rust/Tauri 编译环境 (固定版本), Git via PPA, 内置安全扫描 (gitleaks + betterleaks) 与 pre-commit |
 | `glm-coding-grabber/` | `ghcr.io/{owner}/glm-coding-grabber` | GLM Coding CAPTCHA 识别服务 (从上游仓库构建) |
 | `open-web-search/` | `ghcr.io/{owner}/open-web-search` | Open WebSearch MCP 服务器 (从上游仓库构建, 手动维护 Dockerfile) |
 | `brave-search/` | `ghcr.io/{owner}/brave-search` | Brave Search MCP 服务器 (从上游仓库构建, 手动维护 Dockerfile) |
