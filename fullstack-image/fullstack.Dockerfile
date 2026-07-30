@@ -33,6 +33,7 @@ ARG FZF_VERSION=0.72.0
 ARG ZOXIDE_VERSION=0.9.9
 ARG GITLEAKS_VERSION=8.30.1
 ARG BETTERLEAKS_VERSION=1.7.2
+ARG PRE_COMMIT_VERSION=4.6.1
 ARG RUST_VERSION=1.97.1
 ARG RUSTUP_VERSION=1.29.0
 ARG USER_UID=1000
@@ -70,6 +71,7 @@ ENV FZF_VERSION=${FZF_VERSION}
 ENV ZOXIDE_VERSION=${ZOXIDE_VERSION}
 ENV GITLEAKS_VERSION=${GITLEAKS_VERSION}
 ENV BETTERLEAKS_VERSION=${BETTERLEAKS_VERSION}
+ENV PRE_COMMIT_VERSION=${PRE_COMMIT_VERSION}
 ENV RUST_VERSION=${RUST_VERSION}
 ENV RUSTUP_VERSION=${RUSTUP_VERSION}
 ENV USER_UID=${USER_UID}
@@ -262,6 +264,12 @@ RUN wget https://github.com/betterleaks/betterleaks/releases/download/v${BETTERL
     tar -xzf /tmp/betterleaks_${BETTERLEAKS_VERSION}_linux_x64.tar.gz -C ~/.local/bin betterleaks && \
     rm /tmp/betterleaks_${BETTERLEAKS_VERSION}_linux_x64.tar.gz /tmp/betterleaks_checksums.txt && \
     betterleaks version
+
+# ==========================================
+# 16.8.3. 精确安装指定版本的 pre-commit (neo 用户, 经 uv tool)
+# ==========================================
+RUN ~/.local/bin/uv tool install pre-commit==${PRE_COMMIT_VERSION} && \
+    pre-commit --version
 
 # ==========================================
 # 16.9. 精确安装指定版本的 Rust 工具链 (neo 用户)
