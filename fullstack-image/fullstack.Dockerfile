@@ -36,6 +36,8 @@ ARG BETTERLEAKS_VERSION=1.7.2
 ARG PRE_COMMIT_VERSION=4.6.1
 ARG RUST_VERSION=1.97.1
 ARG RUSTUP_VERSION=1.29.0
+ARG GO_VERSION=1.26.5
+ARG GO_SHA256=5c2c3b16caefa1d968a94c1daca04a7ca301a496d9b086e17ad77bb81393f053
 ARG USER_UID=1000
 ARG USER_GID=1000
 ARG USERNAME=neo
@@ -74,6 +76,9 @@ ENV BETTERLEAKS_VERSION=${BETTERLEAKS_VERSION}
 ENV PRE_COMMIT_VERSION=${PRE_COMMIT_VERSION}
 ENV RUST_VERSION=${RUST_VERSION}
 ENV RUSTUP_VERSION=${RUSTUP_VERSION}
+ENV GO_VERSION=${GO_VERSION}
+ENV GOROOT=/home/${USERNAME}/opt/go
+ENV GOPATH=/home/${USERNAME}/go
 ENV USER_UID=${USER_UID}
 ENV USER_GID=${USER_GID}
 ENV USERNAME=${USERNAME}
@@ -91,7 +96,7 @@ ENV CTAG=${IMAGE_TAG}
 ENV CID=${IMAGE_TAG}:${BUILD_TIMESTAMP}
 
 # 配置全局 PATH，确保所有手动安装的二进制文件随时可用
-ENV PATH="/home/${USERNAME}/.cargo/bin:/home/${USERNAME}/.local/bin:/home/${USERNAME}/.local/node/bin:/home/${USERNAME}/opt/maven/bin:/home/${USERNAME}/opt/gradle/bin:/home/${USERNAME}/opt/nvim/bin:${ANDROID_HOME}/cmdline-tools/latest/bin:${ANDROID_HOME}/platform-tools:${PATH}"
+ENV PATH="/home/${USERNAME}/opt/go/bin:/home/${USERNAME}/go/bin:/home/${USERNAME}/.cargo/bin:/home/${USERNAME}/.local/bin:/home/${USERNAME}/.local/node/bin:/home/${USERNAME}/opt/maven/bin:/home/${USERNAME}/opt/gradle/bin:/home/${USERNAME}/opt/nvim/bin:${ANDROID_HOME}/cmdline-tools/latest/bin:${ANDROID_HOME}/platform-tools:${PATH}"
 
 # ==========================================
 # 2. 安装系统基础工具、配置时区及 Python
@@ -286,6 +291,20 @@ RUN curl -fsSL https://static.rust-lang.org/rustup/archive/${RUSTUP_VERSION}/x86
         --default-toolchain ${RUST_VERSION} && \
     rm /tmp/rustup-init && \
     ~/.cargo/bin/rustup component add rust-src rust-analyzer
+
+# ==========================================
+# 16.10. 精确安装指定版本的 Go (neo 用户)
+# 官方 tarball + 硬编码 sha256 校验 (带外信任锚: 同时防传输损坏与下载源篡改)
+# 升级版本时重抓哈希:
+#   curl -sSL "https://go.dev/dl/?mode=json" | jq -r '.[0].files[] | select(.os=="linux" and .arch=="amd64") | .sha256'
+# tarball 自带 go/ 目录, 解压后落在 ~/opt/go
+# ==========================================
+RUN wget https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz -O /tmp/go.tar.gz && \
+    echo "${GO_SHA256}  /tmp/go.tar.gz" | sha256sum -c - && \
+    tar -xzf /tmp/go.tar.gz -C ~/opt && \
+    rm /tmp/go.tar.gz && \
+    mkdir -p ~/go/bin && \
+    ~/opt/go/bin/go version
 
 # ==========================================
 # 17. 为 neo 用户安装 OpenSpec
