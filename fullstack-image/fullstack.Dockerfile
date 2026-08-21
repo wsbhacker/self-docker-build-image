@@ -98,7 +98,8 @@ ENV CID=${IMAGE_TAG}:${BUILD_TIMESTAMP}
 
 # 防止 Tauri (WebKitGTK) 硬件加速在 WSL2 下闪烁或黑屏
 ENV WEBKIT_DISABLE_COMPOSITING_MODE=1
-# 允许容器内 Chromium 免沙箱启动并防止 /dev/shm 溢出崩溃
+# 支持 Chrome 及 Chromium 免沙箱运行
+ENV CHROME_FLAGS="--no-sandbox --disable-dev-shm-usage"
 ENV CHROMIUM_FLAGS="--no-sandbox --disable-dev-shm-usage"
 
 
@@ -129,7 +130,8 @@ RUN apt-get update && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # ==========================================
-# 2.5. 安装 Tauri、Electron  及 GUI 认证环境 (root)
+# 2.5. 安装 Tauri、Electron (ZCode) 及 GUI 认证环境 (root)
+# 彻底解决 Ubuntu 24.04 Snap 依赖与 t64 包名问题
 # ==========================================
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
@@ -137,16 +139,19 @@ RUN apt-get update && \
         pkg-config file libssl-dev libxdo-dev \
         libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev \
         # --- 2. GUI/D-Bus 系统总线与 MESA 图形渲染 ---
-        dbus dbus-x11 libgl1-mesa-dri libglx-mesa0 libgles2-mesa \
+        dbus dbus-x11 libgl1-mesa-dri libglx-mesa0 libgles2 \
         fonts-noto-cjk fonts-noto-color-emoji \
-        # --- 3. Electron / Chromium (ZCode) 底层渲染与凭据依赖 ---
-        libgbm1 libnss3 libatk1.0-0 libatk-bridge2.0-0 \
-        libcups2 libdrm2 libxcomposite1 libxdamage1 libxrandr2 \
-        libasound2t64 libpango-1.0-0 libpangocairo-1.0-0 \
-        libxkbcommon0 libxshmfence1 libx11-xcb1 libxcb-dri3-0 libsecret-1-0 \
-        # --- 4. 浏览器认证支持 (唤起工具 + 原生 Chromium 浏览器) ---
-        xdg-utils chromium && \
+        # --- 3. Chromium / Electron 核心底座依赖 ---
+        libgbm1 libnss3 libasound2t64 libsecret-1-0 \
+        libx11-xcb1 libxcb-dri3-0 libxshmfence1 \
+        xdg-utils && \
+    # --- 4. 安装 Google Chrome 替代被 Snap 化的 chromium (支持 OAuth 认证唤起) ---
+    wget -q https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb -O /tmp/chrome.deb && \
+    apt-get install -y --no-install-recommends /tmp/chrome.deb && \
+    rm /tmp/chrome.deb && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
+
+
 
 # ===== Python multi-stage copy =====
 COPY --from=python /usr/local /usr/local
