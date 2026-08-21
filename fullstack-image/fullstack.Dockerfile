@@ -98,9 +98,6 @@ ENV CID=${IMAGE_TAG}:${BUILD_TIMESTAMP}
 
 # 防止 Tauri (WebKitGTK) 硬件加速在 WSL2 下闪烁或黑屏
 ENV WEBKIT_DISABLE_COMPOSITING_MODE=1
-# 支持 Chrome 及 Chromium 免沙箱运行
-ENV CHROME_FLAGS="--no-sandbox --disable-dev-shm-usage"
-ENV CHROMIUM_FLAGS="--no-sandbox --disable-dev-shm-usage"
 
 
 # 配置全局 PATH，确保所有手动安装的二进制文件随时可用
@@ -145,10 +142,15 @@ RUN apt-get update && \
         libx11-xcb1 libxcb-dri3-0 libxshmfence1 \
         libnotify4 libxss1 \
         xdg-utils && \
-    # --- 4. 安装 Google Chrome ---
+    # --- 4. 安装 Google Chrome 并硬核注入免沙箱参数 ---
     wget -q https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb -O /tmp/chrome.deb && \
     apt-get install -y --no-install-recommends /tmp/chrome.deb && \
     rm /tmp/chrome.deb && \
+    # 强制让所有调用（包括 xdg-open）自动注入 --no-sandbox，解决 Auth 点击无弹窗崩溃问题
+    sed -i 's/exec -a "$0" "$HERE\/chrome"/exec -a "$0" "$HERE\/chrome" --no-sandbox --disable-dev-shm-usage/g' /opt/google/chrome/google-chrome && \
+    # 关联 xdg-open 默认 HTTP/HTTPS 处理程序为 Chrome
+    xdg-mime default google-chrome.desktop x-scheme-handler/http && \
+    xdg-mime default google-chrome.desktop x-scheme-handler/https && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # ===== Python multi-stage copy =====
