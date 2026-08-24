@@ -27,6 +27,7 @@ ARG YARN_VERSION=1.22.22
 ARG NEOVIM_VERSION=0.11.6
 ARG CHEZMOI_VERSION=2.70.0
 ARG OPENSPEC_VERSION=1.2.0
+ARG ZCODE_VERSION=3.8.1
 ARG RIPGREP_VERSION=15.1.0
 ARG FD_VERSION=10.4.2
 ARG FZF_VERSION=0.72.0
@@ -130,6 +131,42 @@ RUN apt-get update && \
         pkg-config file libssl-dev libxdo-dev \
         libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# ==========================================
+# 2.6. GUI 桌面运行时支持 (WSLg 直通用, root)
+# 中文字体 + DBus 会话工具 + X11 认证 + fcitx5 输入法(X11 模式)
+# Electron 通用运行库兜底 (libnss3/libasound2/libfuse2), 供任意第三方 AppImage/deb 应用使用
+# 注意: WSLg 不支持 Windows 输入法穿透, 容器内键入中文依赖 fcitx5
+# ==========================================
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        fonts-noto-cjk fonts-noto-color-emoji \
+        dbus-x11 xauth xdg-utils im-config \
+        libnss3 libasound2t64 libfuse2t64 libxtst6 \
+        fcitx5 fcitx5-chinese-addons \
+        fcitx5-frontend-gtk3 fcitx5-frontend-gtk4 fcitx5-frontend-qt5 && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# --- GUI: 输入法环境变量 (fcitx5, X11/XIM 路径) ---
+ENV GTK_IM_MODULE=fcitx \
+    QT_IM_MODULE=fcitx \
+    XMODIFIERS=@im=fcitx \
+    SDL_IM_MODULE=fcitx
+
+# ==========================================
+# 2.7. ZCode 桌面应用 (智谱 ADE, Electron) (root)
+# apt 安装 deb 自动解析声明的依赖 (libnss3/libsecret/libnotify 等)
+# chrome-sandbox 补 setuid 位: 容器内 userns 受限时保留 Chromium 沙箱
+# 升级版本只需改 ZCODE_VERSION; URL 规律:
+#   https://cdn-zcode.z.ai/zcode/electron/releases/{ver}/linux-x64/ZCode-{ver}-linux-x64.deb
+# ==========================================
+ARG ZCODE_VERSION=3.8.1
+RUN wget "https://cdn-zcode.z.ai/zcode/electron/releases/${ZCODE_VERSION}/linux-x64/ZCode-${ZCODE_VERSION}-linux-x64.deb" \
+        -O /tmp/zcode.deb && \
+    apt-get update && apt-get install -y --no-install-recommends /tmp/zcode.deb && \
+    rm /tmp/zcode.deb && \
+    chmod 4755 /opt/ZCode/chrome-sandbox && \
+    ln -sf /opt/ZCode/zcode /usr/local/bin/zcode
 
 # ===== Python multi-stage copy =====
 COPY --from=python /usr/local /usr/local

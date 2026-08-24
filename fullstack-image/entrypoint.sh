@@ -49,4 +49,26 @@ if [ -n "${android_dev}" ]; then
   fi
 fi
 
+# ==========================================
+# GUI 桌面支持（WSLg 直通场景）
+# 仅当存在 X 显示时初始化: 运行时目录 + DBus 会话总线 + fcitx5 输入法
+# 无 DISPLAY 的 CI / 纯终端用法完全不受影响
+# ==========================================
+if [ -n "${DISPLAY}" ]; then
+    # 固定运行时目录与总线地址, 保证后续 docker compose exec 的新会话拿到同一环境
+    export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/tmp/gui-session}"
+    mkdir -p "$XDG_RUNTIME_DIR" && chmod 700 "$XDG_RUNTIME_DIR"
+    export DBUS_SESSION_BUS_ADDRESS="${DBUS_SESSION_BUS_ADDRESS:-unix:path=$XDG_RUNTIME_DIR/bus}"
+
+    # 会话总线未运行则拉起 (GTK IM 模块经 D-Bus 连接 fcitx5)
+    if ! [ -S "${DBUS_SESSION_BUS_ADDRESS#unix:path=}" ]; then
+        dbus-daemon --session --fork --address="$DBUS_SESSION_BUS_ADDRESS" || true
+    fi
+
+    # fcitx5 必须禁用 wayland 前端: WSLg 的 Weston 拒绝绑定 input-method 协议 (wslg#1430)
+    if command -v fcitx5 >/dev/null 2>&1 && ! pgrep -x fcitx5 >/dev/null 2>&1; then
+        fcitx5 --disable=wayland -d >/dev/null 2>&1 || true
+    fi
+fi
+
 exec "$@"
