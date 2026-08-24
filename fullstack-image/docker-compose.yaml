@@ -3,6 +3,8 @@ services:
     image: fullstack-base
     tty: true
     stdin_open: true
+    # gui: docker 默认 /dev/shm 仅 64MB, Chrome 共享内存超限会随机 SIGTRAP 崩溃, 调大根治
+    shm_size: "256m"
     environment:
       # zsh
       - ZDOTDIR=/home/${CONTAINER_USER:-neo}/zsh
@@ -35,8 +37,10 @@ services:
       - XDG_RUNTIME_DIR=/tmp/gui-session
       - DBUS_SESSION_BUS_ADDRESS=unix:path=/tmp/gui-session/bus
 
-        # gui: electron 沙箱兜底开关(镜像内 chrome-sandbox 已加 setuid, 仅其失效时启用)
-      # - ELECTRON_DISABLE_SANDBOX=1
+        # gui: electron 沙箱必须关闭 —— docker 默认不给容器 CAP_SYS_ADMIN 且禁非特权 userns,
+        # Chromium 两条沙箱路径(需嵌套 PID ns 的 SUID helper / userns)都无法创建命名空间,
+        # 不关则启动即崩(zygote_host FATAL)。以容器外层隔离替代应用层沙箱, 属容器跑 GUI 的标准做法
+      - ELECTRON_DISABLE_SANDBOX=1
 
     volumes:
       - $HOME/full-stack/claude/.claude:/home/${CONTAINER_USER:-neo}/.claude
@@ -59,6 +63,9 @@ services:
 
         # work dir
       - $HOME/project:/home/${CONTAINER_USER:-neo}/work
+
+        # gui: 应用认证态持久化 (zcode 登录态/OAuth 凭据, 容器重建不丢)
+      - $HOME/full-stack/.zcode:/home/${CONTAINER_USER:-neo}/.zcode
 
         # gui (WSLg 直通): 显示服务 socket 与认证文件
       - /mnt/wslg:/mnt/wslg

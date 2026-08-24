@@ -28,6 +28,7 @@ ARG NEOVIM_VERSION=0.11.6
 ARG CHEZMOI_VERSION=2.70.0
 ARG OPENSPEC_VERSION=1.2.0
 ARG ZCODE_VERSION=3.8.1
+ARG GOOGLE_CHROME_VERSION=151.0.7922.173-1
 ARG RIPGREP_VERSION=15.1.0
 ARG FD_VERSION=10.4.2
 ARG FZF_VERSION=0.72.0
@@ -154,19 +155,15 @@ ENV GTK_IM_MODULE=fcitx \
     SDL_IM_MODULE=fcitx
 
 # ==========================================
-# 2.7. ZCode 桌面应用 (智谱 ADE, Electron) (root)
-# apt 安装 deb 自动解析声明的依赖 (libnss3/libsecret/libnotify 等)
-# chrome-sandbox 补 setuid 位: 容器内 userns 受限时保留 Chromium 沙箱
-# 升级版本只需改 ZCODE_VERSION; URL 规律:
-#   https://cdn-zcode.z.ai/zcode/electron/releases/{ver}/linux-x64/ZCode-{ver}-linux-x64.deb
+# 2.7. GUI 桌面应用层: ZCode + Chrome + xdg-open 补丁 (root)
+# 安装逻辑与调试结论全部在 scripts/setup-gui-apps.sh，此处仅做版本参数化；
+# 版本可按同名 ARG 覆盖（见顶部参数区）
 # ==========================================
-ARG ZCODE_VERSION=3.8.1
-RUN wget "https://cdn-zcode.z.ai/zcode/electron/releases/${ZCODE_VERSION}/linux-x64/ZCode-${ZCODE_VERSION}-linux-x64.deb" \
-        -O /tmp/zcode.deb && \
-    apt-get update && apt-get install -y --no-install-recommends /tmp/zcode.deb && \
-    rm /tmp/zcode.deb && \
-    chmod 4755 /opt/ZCode/chrome-sandbox && \
-    ln -sf /opt/ZCode/zcode /usr/local/bin/zcode
+COPY scripts/setup-gui-apps.sh /tmp/setup-gui-apps.sh
+RUN ZCODE_VERSION=${ZCODE_VERSION} \
+    GOOGLE_CHROME_VERSION=${GOOGLE_CHROME_VERSION} \
+    bash /tmp/setup-gui-apps.sh && \
+    rm /tmp/setup-gui-apps.sh
 
 # ===== Python multi-stage copy =====
 COPY --from=python /usr/local /usr/local
