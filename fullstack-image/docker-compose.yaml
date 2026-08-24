@@ -1,0 +1,73 @@
+services:
+  fullstack-base:
+    image: fullstack-base
+    tty: true
+    stdin_open: true
+    environment:
+      # zsh
+      - ZDOTDIR=/home/${CONTAINER_USER:-neo}/zsh
+      - ZSH=/home/${CONTAINER_USER:-neo}/zsh/ohmyzsh
+
+      - HOME=/home/${CONTAINER_USER:-neo}
+
+        # ripgrep
+      - RIPGREP_CONFIG_PATH=/home/${CONTAINER_USER:-neo}/xdg/config/ripgrep/.ripgreprc
+
+        # fzf
+      - FZF_DEFAULT_OPTS_FILE=/home/${CONTAINER_USER:-neo}/xdg/config/fzf/.fzfrc
+
+        # git
+      - GIT_CONFIG_GLOBAL=/home/${CONTAINER_USER:-neo}/git/.gitconfig
+
+        # xdg config
+      - XDG_CONFIG_HOME=/home/${CONTAINER_USER:-neo}/xdg/config
+      - XDG_DATA_HOME=/home/${CONTAINER_USER:-neo}/xdg/data
+      - XDG_STATE_HOME=/home/${CONTAINER_USER:-neo}/xdg/state
+      - XDG_CACHE_HOME=/home/${CONTAINER_USER:-neo}/xdg/cache
+      - CLAUDE_CONFIG_DIR=/home/${CONTAINER_USER:-neo}/.claude
+
+        # gui (WSLg 直通): 窗口渲染到 Windows 桌面
+      - DISPLAY=${DISPLAY:-:0}
+      - XAUTHORITY=/mnt/wslg/.Xauthority
+      - PULSE_SERVER=/mnt/wslg/PulseServer
+
+        # gui: 固定运行时目录与 DBus 会话总线地址, 保证 docker compose exec 新会话与 entrypoint 同环境
+      - XDG_RUNTIME_DIR=/tmp/gui-session
+      - DBUS_SESSION_BUS_ADDRESS=unix:path=/tmp/gui-session/bus
+
+        # gui: electron 沙箱兜底开关(镜像内 chrome-sandbox 已加 setuid, 仅其失效时启用)
+      # - ELECTRON_DISABLE_SANDBOX=1
+
+    volumes:
+      - $HOME/full-stack/claude/.claude:/home/${CONTAINER_USER:-neo}/.claude
+      - $HOME/full-stack/claude/.agents:/home/${CONTAINER_USER:-neo}/.agents
+
+      - $HOME/full-stack/my-claude-marketplace:/home/${CONTAINER_USER:-neo}/my-claude-marketplace
+
+      - $HOME/full-stack/.m2:/home/${CONTAINER_USER:-neo}/.m2
+
+      - $HOME/ai-doc/ai-doc-p/my-claude:/home/${CONTAINER_USER:-neo}/claude-common
+
+        # config dir
+      - $HOME/full-stack/xdg:/home/${CONTAINER_USER:-neo}/xdg
+      - $HOME/full-stack/xdg/config/zsh:/home/${CONTAINER_USER:-neo}/zsh
+      - $HOME/full-stack/xdg/config/git:/home/${CONTAINER_USER:-neo}/git
+      - $HOME/full-stack/xdg/config/ripgrep:/home/${CONTAINER_USER:-neo}/ripgrep
+
+        # gradle
+      - $HOME/full-stack/xdg/config/gradle_user_home:/home/${CONTAINER_USER:-neo}/.gradle
+
+        # work dir
+      - $HOME/project:/home/${CONTAINER_USER:-neo}/work
+
+        # gui (WSLg 直通): 显示服务 socket 与认证文件
+      - /mnt/wslg:/mnt/wslg
+      - /tmp/.X11-unix:/tmp/.X11-unix
+
+        # gpu 硬件渲染直通(可选): 宿主存在 /dev/dxg 时取消注释启用,
+        # 不启用时走 mesa 软件渲染(llvmpipe), 日常 IDE 够用但动画性能一般
+      # - /dev/dxg:/dev/dxg
+      # - /usr/lib/wsl/lib:/usr/lib/wsl/lib
+
+    networks:
+      - hacker_net
