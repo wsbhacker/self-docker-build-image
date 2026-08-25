@@ -1,0 +1,20 @@
+# 编辑器统一配置：管"保存时写入什么"，与 .gitattributes 管"仓库怎么存"互补
+# root = true：告诉编辑器停止向上级目录继续查找 .editorconfig，本文件即顶层
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 2
+
+[*.py]
+indent_size = 4
+
+[*.md]
+trim_trailing_whitespace = false
+
+[*.{bat,cmd}]
+end_of_line = crlf

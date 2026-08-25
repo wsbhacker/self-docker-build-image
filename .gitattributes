@@ -1,0 +1,24 @@
+# ===== 跨平台行尾规范：仓库统一 LF，例外显式声明 =====
+# 本文件随仓库分发，优先级高于各机器的 core.autocrlf / core.eol
+
+# 默认规则：所有文件按文本探测(auto)，入库归一化为 LF，检出时保持 LF
+* text=auto eol=lf
+
+# 硬例外：cmd.exe 对 LF 批处理有解析 bug，必须 CRLF
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# 防御：shell/Docker 是本仓库核心资产，即使默认行被误改也强制 LF
+*.sh text eol=lf
+Dockerfile text eol=lf
+*.dockerfile text eol=lf
+
+# 二进制防御段（仓库当前无二进制文件，防未来引入）：禁止一切转换与文本 diff
+*.png binary
+*.jpg binary
+*.ico binary
+*.ttf binary
+*.zip binary
+*.gz binary
+*.pdf binary
+*.exe binary
