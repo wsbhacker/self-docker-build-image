@@ -138,13 +138,19 @@ RUN apt-get update && \
 # 中文字体 + DBus 会话工具 + X11 认证 + fcitx5 输入法(X11 模式)
 # Electron 通用运行库兜底 (libnss3/libasound2/libfuse2), 供任意第三方 AppImage/deb 应用使用
 # 注意: WSLg 不支持 Windows 输入法穿透, 容器内键入中文依赖 fcitx5
+# 注意: fcitx5-rime 的 Depends 只拉到 librime-data(空壳, 仅文档), 真正的输入方案在其 Recommends
+#       里, 会被本层 --no-install-recommends 砍掉; 故必须显式安装 rime-data-luna-pinyin,
+#       它提供 luna_pinyin/_simp/_fluency 全部方案(与用户迁移的 weasel 配置 schema_list 对应);
+#       librime-bin 同理(也在 Recommends 中被砍): rime_dict_manager 导出词频快照,
+#       rime_deployer 命令行部署/排错
 # ==========================================
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         fonts-noto-cjk fonts-noto-color-emoji \
         dbus-x11 xauth xdg-utils im-config \
         libnss3 libasound2t64 libfuse2t64 libxtst6 \
-        fcitx5 fcitx5-chinese-addons fcitx5-rime \
+        fcitx5 fcitx5-chinese-addons fcitx5-rime rime-data-luna-pinyin \
+        librime-bin \
         fcitx5-frontend-gtk3 fcitx5-frontend-gtk4 fcitx5-frontend-qt5 && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
