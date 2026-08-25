@@ -65,6 +65,31 @@ if [ -n "${DISPLAY}" ]; then
         dbus-daemon --session --fork --address="$DBUS_SESSION_BUS_ADDRESS" || true
     fi
 
+    # 预置输入法条目: 全新 fcitx5 默认组仅英文键盘, 无第二输入法可切换;
+    # 必须在其首次启动前写入(它退出时会保存内存状态, 反序会被回写覆盖)
+    _fcitx_conf="${XDG_CONFIG_HOME:-$HOME/.config}/fcitx5"
+    if command -v fcitx5 >/dev/null 2>&1 && [ ! -f "$_fcitx_conf/profile" ]; then
+        mkdir -p "$_fcitx_conf"
+        cat > "$_fcitx_conf/profile" <<'PROFILE'
+[Groups/0]
+Name=Default
+Default Layout=us
+DefaultIM=pinyin
+
+[Groups/0/Items/0]
+Name=keyboard-us
+Layout=
+
+[Groups/0/Items/1]
+Name=pinyin
+Layout=
+
+[GroupOrder]
+0=Default
+PROFILE
+    fi
+    unset _fcitx_conf
+
     # fcitx5 必须禁用 wayland 前端: WSLg 的 Weston 拒绝绑定 input-method 协议 (wslg#1430)
     if command -v fcitx5 >/dev/null 2>&1 && ! pgrep -x fcitx5 >/dev/null 2>&1; then
         fcitx5 --disable=wayland -d >/dev/null 2>&1 || true
