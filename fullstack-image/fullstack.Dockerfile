@@ -144,7 +144,7 @@ RUN apt-get update && \
         fonts-noto-cjk fonts-noto-color-emoji \
         dbus-x11 xauth xdg-utils im-config \
         libnss3 libasound2t64 libfuse2t64 libxtst6 \
-        fcitx5 fcitx5-chinese-addons \
+        fcitx5 fcitx5-chinese-addons fcitx5-rime \
         fcitx5-frontend-gtk3 fcitx5-frontend-gtk4 fcitx5-frontend-qt5 && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
