@@ -143,6 +143,9 @@ RUN apt-get update && \
 #       它提供 luna_pinyin/_simp/_fluency 全部方案(与用户迁移的 weasel 配置 schema_list 对应);
 #       librime-bin 同理(也在 Recommends 中被砍): rime_dict_manager 导出词频快照,
 #       rime_deployer 命令行部署/排错
+# 注意: librime-plugin-lua 是独立插件包(不随 librime1t64 安装), 提供
+#       lua_translator/lua_filter 等扩展组件; 缺失时部署不报错、打字正常,
+#       但用户方案里的自定义 lua 脚本(v 前缀快捷输入/git emoji)被静默跳过
 # ==========================================
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
@@ -151,6 +154,7 @@ RUN apt-get update && \
         libnss3 libasound2t64 libfuse2t64 libxtst6 \
         fcitx5 fcitx5-chinese-addons fcitx5-rime rime-data-luna-pinyin \
         librime-bin \
+        librime-plugin-lua \
         fcitx5-frontend-gtk3 fcitx5-frontend-gtk4 fcitx5-frontend-qt5 && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
