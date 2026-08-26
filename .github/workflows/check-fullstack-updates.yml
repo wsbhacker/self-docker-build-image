@@ -33,9 +33,16 @@ jobs:
             https://api.github.com/repos/openai/codex/releases/latest)
           CODEX_TIME=$(jq -r '.published_at' /tmp/codex.json)
 
+          # ZCode 版本探测抽为独立脚本(.github/scripts/zcode-latest.sh),
+          # 与 build-fullstack-batch.yml 共用同一实现。
+          # 失败语义(fail-safe): 脚本永远 exit 0, 探测失败时 ZCODE_OK=0
+          # 且 ZCODE_TS=0, 不参与下方 max 比较, 不影响 claude/codex 两路原有判定。
+          eval "$(bash .github/scripts/zcode-latest.sh)"
+
           echo "::group::🔍 [诊断] 上游 release 探测"
           echo "claude-code: http=$CLAUDE_HTTP  published_at=[$CLAUDE_TIME]"
           echo "codex      : http=$CODEX_HTTP  published_at=[$CODEX_TIME]"
+          echo "zcode      : ok=$ZCODE_OK ver=[$ZCODE_VER] releaseDate=[$ZCODE_RELEASE_DATE]"
           echo "claude body 前 200 字: $(head -c 200 /tmp/claude.json)"
           echo "codex  body 前 200 字: $(head -c 200 /tmp/codex.json)"
           echo "::endgroup::"
@@ -43,13 +50,14 @@ jobs:
           CLAUDE_TS=$(date -d "$CLAUDE_TIME" +%s)
           CODEX_TS=$(date -d "$CODEX_TIME" +%s)
 
-          if [ "$CLAUDE_TS" -gt "$CODEX_TS" ]; then
-            echo "latest_ts=$CLAUDE_TS" >> $GITHUB_OUTPUT
-            echo "[诊断] latest_ts=claude($CLAUDE_TS) = $(date -d "@$CLAUDE_TS" '+%Y-%m-%d %H:%M:%S UTC' 2>/dev/null)"
-          else
-            echo "latest_ts=$CODEX_TS" >> $GITHUB_OUTPUT
-            echo "[诊断] latest_ts=codex($CODEX_TS) = $(date -d "@$CODEX_TS" '+%Y-%m-%d %H:%M:%S UTC' 2>/dev/null)"
-          fi
+          # 三路上游取最新时间戳, 并记录胜者来源便于诊断
+          LATEST_TS="$CLAUDE_TS"; LATEST_SRC="claude"
+          if [ "$CODEX_TS" -gt "$LATEST_TS" ]; then LATEST_TS="$CODEX_TS"; LATEST_SRC="codex"; fi
+          if [ "$ZCODE_TS" -gt "$LATEST_TS" ]; then LATEST_TS="$ZCODE_TS"; LATEST_SRC="zcode($ZCODE_VER)"; fi
+
+          echo "latest_ts=$LATEST_TS" >> $GITHUB_OUTPUT
+          echo "latest_src=$LATEST_SRC" >> $GITHUB_OUTPUT
+          echo "[诊断] latest_ts=$LATEST_SRC($LATEST_TS) = $(date -d "@$LATEST_TS" '+%Y-%m-%d %H:%M:%S UTC' 2>/dev/null)"
 
       - name: Check if rebuild needed
         id: check

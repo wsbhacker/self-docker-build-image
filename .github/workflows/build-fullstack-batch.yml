@@ -134,8 +134,28 @@ jobs:
       - name: Format build args
         id: format-args
         run: |
+          # 动态解析 ZCode 最新版注入构建(与 CLAUDE_VERSION/CODEX 装 latest 同款策略)。
+          # 版本探测共用独立脚本 .github/scripts/zcode-latest.sh:
+          # 探测失败时 ZCODE_OK=0 → 不注入, 回落 Dockerfile ARG 默认值(fail-safe)。
+          # 注入行放在场景参数之前: scenarios.yaml 若显式 pin 了 ZCODE_VERSION,
+          # build-arg 后者覆盖前者, 显式声明优先于动态值。
+          eval "$(bash .github/scripts/zcode-latest.sh)"
+
+          INJECT=""
+          if [ "$ZCODE_OK" = "1" ]; then
+            INJECT="ZCODE_VERSION=${ZCODE_VER}"
+            echo "[诊断] 注入 ZCODE_VERSION=${ZCODE_VER}"
+          else
+            echo "[诊断] ZCode 版本解析失败, 使用 Dockerfile ARG 兜底值"
+          fi
+
+          {
+            if [ -n "$INJECT" ]; then echo "$INJECT"; fi
+            echo "${{ matrix.scenario.build_args_str }}"
+          } > /tmp/build_args.txt
+
           echo "args<<EOF" >> $GITHUB_OUTPUT
-          echo "${{ matrix.scenario.build_args_str }}" >> $GITHUB_OUTPUT
+          cat /tmp/build_args.txt
           echo "EOF" >> $GITHUB_OUTPUT
         shell: bash
 
