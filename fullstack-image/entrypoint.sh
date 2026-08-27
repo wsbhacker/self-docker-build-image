@@ -92,8 +92,31 @@ PROFILE
     unset _fcitx_conf
 
     # fcitx5 必须禁用 wayland 前端: WSLg 的 Weston 拒绝绑定 input-method 协议 (wslg#1430)
-    if command -v fcitx5 >/dev/null 2>&1 && ! pgrep -x fcitx5 >/dev/null 2>&1; then
-        fcitx5 --disable=wayland -d >/dev/null 2>&1 || true
+    # WSLg 会话重置(锁屏超时/注销等)会重建 X server, fcitx5 因 X 断连退出;
+    # 守护循环自动复活 + 日志落盘, 长锁屏回来后 5 秒内恢复中文输入。
+    # set +e: 本脚本顶部的 set -e 会被继承, fcitx5 非零退出(X 断连)会连带杀死守护循环
+    # 活性检查排除 Z 状态: 旧 -d 方案遗留的僵尸会被 pgrep 误判为存活导致永不拉起
+    # 前台运行(不用 -d): 进程退出循环立即感知, 且由本 shell wait 收割不留僵尸
+    if command -v fcitx5 >/dev/null 2>&1; then
+        (
+            set +e
+            _fcitx5_log="${XDG_RUNTIME_DIR:-/tmp}/fcitx5.log"
+            while true; do
+                if [ -z "$(ps -C fcitx5 -o stat= 2>/dev/null | grep -v '^Z')" ]; then
+                    # 保险: 日志超 1MB 只留末 256KB, 防 X 长期不可用时重试刷盘
+                    if [ -s "$_fcitx5_log" ] && [ "$(wc -c <"$_fcitx5_log")" -gt 1048576 ]; then
+                        tail -c 262144 "$_fcitx5_log" >"$_fcitx5_log.trunc" && mv "$_fcitx5_log.trunc" "$_fcitx5_log"
+                    fi
+                    echo "$(date '+%F %T') starting fcitx5" >>"$_fcitx5_log"
+                    fcitx5 --disable=wayland >>"$_fcitx5_log" 2>&1
+                    _rc=$?
+                    echo "$(date '+%F %T') fcitx5 exited (code $_rc), restart in 5s" >>"$_fcitx5_log"
+                    sleep 5
+                else
+                    sleep 10
+                fi
+            done
+        ) &
     fi
 fi
 
