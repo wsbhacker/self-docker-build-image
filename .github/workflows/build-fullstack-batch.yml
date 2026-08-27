@@ -155,7 +155,7 @@ jobs:
           } > /tmp/build_args.txt
 
           echo "args<<EOF" >> $GITHUB_OUTPUT
-          cat /tmp/build_args.txt
+          cat /tmp/build_args.txt >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
         shell: bash
 
