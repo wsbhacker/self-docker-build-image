@@ -61,42 +61,9 @@ if [ -n "${DISPLAY}" ]; then
     export DBUS_SESSION_BUS_ADDRESS="${DBUS_SESSION_BUS_ADDRESS:-unix:path=$XDG_RUNTIME_DIR/bus}"
 
     # 会话总线未运行则拉起 (GTK IM 模块经 D-Bus 连接 fcitx5)
-    # 探活用 ListNames ping, 不能只查 socket 文件存在: 容器 stop/start 保留文件系统,
-    # 上个会话的 stale socket 会让 -S 误判"总线存活", dbus 不被拉起,
-    # fcitx5 dbus addon 加载失败 -> 所有 GTK 应用输入法瘫痪 (2026-09-01 实测踩坑)
-    if ! dbus-send --bus="$DBUS_SESSION_BUS_ADDRESS" --dest=org.freedesktop.DBus \
-            --type=method_call --reply-timeout=2000 --print-reply / org.freedesktop.DBus.ListNames >/dev/null 2>&1; then
-        rm -f "${DBUS_SESSION_BUS_ADDRESS#unix:path=}"
-        dbus-daemon --session --fork --address="$DBUS_SESSION_BUS_ADDRESS" \
-            || echo "WARN: dbus-daemon failed to start, fcitx5 dbus addon will be broken" >&2
+    if ! [ -S "${DBUS_SESSION_BUS_ADDRESS#unix:path=}" ]; then
+        dbus-daemon --session --fork --address="$DBUS_SESSION_BUS_ADDRESS" || true
     fi
-
-    # dbus 会话总线守护: dbus 运行中被 OOM/误杀后无人复活; fcitx5 对 dbus 断连的反应是
-    # 退出再被 watchdog 拉起, 若届时 dbus 仍死, 新 fcitx5 会带着 dbus addon 加载失败
-    # 继续活着, 此后即使总线复活也不会补注册 -> GTK 应用 IM 永久瘫痪
-    # (2026-09-01 实测: kill dbus -> fcitx5 重启报 Could not load addon dbus 且进程存活)。
-    # 必须独立并行循环: fcitx5 watchdog 常阻塞在前台 fcitx5 进程上, 串行探测不可达。
-    (
-        set +e
-        _dbus_log="${XDG_RUNTIME_DIR:-/tmp}/fcitx5.log"
-        while true; do
-            if ! dbus-send --bus="$DBUS_SESSION_BUS_ADDRESS" --dest=org.freedesktop.DBus \
-                    --type=method_call --reply-timeout=2000 --print-reply / \
-                    org.freedesktop.DBus.ListNames >/dev/null 2>&1; then
-                echo "$(date '+%F %T') dbus session bus dead, restarting" >>"$_dbus_log"
-                mkdir -p "$XDG_RUNTIME_DIR" && chmod 700 "$XDG_RUNTIME_DIR"
-                rm -f "${DBUS_SESSION_BUS_ADDRESS#unix:path=}"
-                if dbus-daemon --session --fork --address="$DBUS_SESSION_BUS_ADDRESS"; then
-                    echo "$(date '+%F %T') dbus session bus restarted" >>"$_dbus_log"
-                    # 逼 fcitx5 重启以重新注册到新总线(残疾状态的它不会自愈)
-                    pkill -x fcitx5 2>/dev/null
-                else
-                    echo "$(date '+%F %T') dbus-daemon restart FAILED" >>"$_dbus_log"
-                fi
-            fi
-            sleep 10
-        done
-    ) &
 
     # 预置输入法条目: 全新 fcitx5 默认组仅英文键盘, 无第二输入法可切换;
     # 必须在其首次启动前写入(它退出时会保存内存状态, 反序会被回写覆盖)。
