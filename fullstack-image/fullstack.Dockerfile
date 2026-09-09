@@ -9,9 +9,6 @@ ARG GIT_VERSION=latest
 ARG IMAGE_TAG=default
 ARG BUILD_TIMESTAMP=default
 
-# ===== Python multi-stage =====
-FROM python:${PYTHON_VERSION}-slim AS python
-
 # 使用 Eclipse Temurin 官方 JDK 镜像 (基于 Ubuntu 24 noble)
 FROM eclipse-temurin:${JDK_VERSION}-jdk-noble
 
@@ -175,9 +172,6 @@ RUN ZCODE_VERSION=${ZCODE_VERSION} \
     bash /tmp/setup-gui-apps.sh && \
     rm /tmp/setup-gui-apps.sh
 
-# ===== Python multi-stage copy =====
-COPY --from=python /usr/local /usr/local
-
 # ==========================================
 # 8. 创建 neo 用户（非 root）并配置 sudo
 # id被占用就删除原来的,不存在就创建
@@ -250,6 +244,30 @@ RUN wget https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x6
 # 14. 精确安装指定版本的 uv (neo 用户)
 # ==========================================
 RUN curl -LsSf https://astral.sh/uv/install.sh | env UV_VERSION=${UV_VERSION} sh
+
+# ==========================================
+# 14.5. uv 自管 Python (python-build-standalone, neo 用户)
+# 不再从 python:slim 镜像混拷 /usr/local —— 那是跨发行版 ABI 雷区:
+# slim 浮动 tag 基座切到 Debian trixie(OpenSSL 3.5)后, 其 _ssl/_hashlib 要求
+# OPENSSL_3.3.0+/3.4.0+ 符号版本, 而 noble 底座 libcrypto 只有 3.0.x,
+# import ssl / import _hashlib 直接 ImportError。
+# PBS(python-build-standalone)将 OpenSSL/zlib/libffi 静态链接进发行版,
+# 与底座系统库零耦合, ssl 永远随 Python 版本配套, 此类断裂从架构上不可能再发生。
+# 版本由 PYTHON_VERSION 指定: minor 级如 3.13, 或精确 patch 如 3.12.7。
+# /opt/python 为全局默认 venv (--seed 自带 pip), python3/pip3 链入 /usr/local/bin。
+# ==========================================
+RUN uv python install ${PYTHON_VERSION} && \
+    sudo mkdir -p /opt/python && \
+    sudo chown ${USERNAME}:${USERNAME} /opt/python && \
+    uv venv --python ${PYTHON_VERSION} --seed /opt/python && \
+    sudo ln -sf /opt/python/bin/python3 /usr/local/bin/python3 && \
+    sudo ln -sf /opt/python/bin/python /usr/local/bin/python && \
+    sudo ln -sf /opt/python/bin/python3 /usr/local/bin/python${PYTHON_VERSION} && \
+    sudo ln -sf /opt/python/bin/pip3 /usr/local/bin/pip3 && \
+    sudo ln -sf /opt/python/bin/pip /usr/local/bin/pip && \
+    python --version && \
+    python3 -c "import ssl; print('python ssl OK:', ssl.OPENSSL_VERSION)" && \
+    pip3 --version
 
 # ==========================================
 # 15. 精确安装现代版 Neovim (neo 用户)
