@@ -15,7 +15,7 @@ on:
 
 jobs:
   build-and-push:
-    # 显式固定: ubuntu-latest 将于 2026-10/11 轮换到 26.04 (runner-images#14748)，
+    # 显式固定: ubuntu-24.04 将于 2026-10/11 轮换到 26.04 (runner-images#14748)，
     # 镜像内容不受 runner 影响(FROM 已 pin)，锁 24.04 只为 CI 工具链可控
     runs-on: ubuntu-24.04
     permissions:
