@@ -2,8 +2,8 @@
 # 换家族/尺寸: 改 environment 两行 + 挂载路径(对照表见下) + 按需调 CTX / command
 #
 # 用法:
-#   docker compose -f Bonsai.compose.yml pull && docker compose -f Bonsai.compose.yml up -d
-#   docker compose -f Bonsai.compose.yml logs -f    # 留意 --no-kv-offload 是否被 fork 接受
+#   docker compose -f Bonsai-2-27B.compose.yaml pull && docker compose -f Bonsai-2-27B.compose.yaml up -d
+#   docker compose -f Bonsai-2-27B.compose.yaml logs -f    # 留意 --no-kv-offload 是否被 fork 接受
 #   访问 http://localhost:8080 ; 健康检查继承镜像内置 HEALTHCHECK(/health)
 #
 # 家族 → 容器内挂载路径对照(脚本按此目录找模型):
@@ -28,7 +28,7 @@ services:
     command: ["--no-kv-offload"]     # 200K FP16 KV(~12.5GB) 留 64G 内存, 权重全上 GPU(~9GB 显存)
                                      # 跑小模型(KV 放得进显存)时删掉此行更快
     volumes:
-      # 模型外挂: 宿主机两个 gguf (PQ2_0 主模型 + mmproj-Q8_0 视觉), 下载命令见 Bonsai.Dockerfile 末尾
+      # 模型外挂: 宿主机两个 gguf (PQ2_0 主模型 + mmproj-Q8_0 视觉), 下载命令见 PrismML-llama.dockerfile 末尾
       - $HOME/models/bonsai2-27B:/app/models/bonsai2-gguf/27B
     # GPU 直通, 等价 docker run --gpus all (libcuda 由 nvidia 容器运行时注入)
     deploy:

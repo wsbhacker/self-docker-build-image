@@ -10,7 +10,7 @@ on:
   push:
     branches: [main]
     paths:
-      - "Bonsai.Dockerfile"
+      - "PrismML-llama.dockerfile"
       - ".github/workflows/build-bonsai.yml"
 
 jobs:
@@ -51,7 +51,7 @@ jobs:
         uses: docker/build-push-action@v7
         with:
           context: .
-          file: ./Bonsai.Dockerfile
+          file: ./PrismML-llama.dockerfile
           platforms: linux/amd64
           push: true
           tags: ${{ steps.meta.outputs.tags }}
