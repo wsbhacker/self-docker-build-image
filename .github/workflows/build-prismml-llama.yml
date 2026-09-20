@@ -10,7 +10,7 @@ on:
   push:
     branches: [main]
     paths:
-      - "prismml-llama.dockerfile"
+      - "prism-ml/prismml-llama.dockerfile"
       - ".github/workflows/build-prismml-llama.yml"
 
 jobs:
@@ -50,8 +50,8 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v7
         with:
-          context: .
-          file: ./prismml-llama.dockerfile
+          context: ./prism-ml
+          file: ./prism-ml/prismml-llama.dockerfile
           platforms: linux/amd64
           push: true
           tags: ${{ steps.meta.outputs.tags }}
