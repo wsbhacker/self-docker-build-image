@@ -1,15 +1,15 @@
-# Bonsai 2 (Ternary-Bonsai-2-27B / Qwen3.8-27B 底座) llama-server 推理服务
-# 镜像配置(200K 上下文 + KV 留内存 + HOST 0.0.0.0)已烤进镜像, 见 Bonsai.Dockerfile
+# Bonsai 家族通用镜像的部署档案: 本文件 = bonsai2 27B @ RTX5070 12GB + 64GB RAM, 200K 上下文
+# 换家族/尺寸: 改 environment 两行 + 挂载路径(对照表见下) + 按需调 CTX / command
 #
 # 用法:
-#   docker compose -f Bonsai.compose.yml pull       # 拉最新 CI 镜像
-#   docker compose -f Bonsai.compose.yml up -d      # 起服务
-#   docker compose -f Bonsai.compose.yml logs -f    # 看启动日志(留意 --no-kv-offload 是否被接受)
+#   docker compose -f Bonsai.compose.yml pull && docker compose -f Bonsai.compose.yml up -d
+#   docker compose -f Bonsai.compose.yml logs -f    # 留意 --no-kv-offload 是否被 fork 接受
 #   访问 http://localhost:8080 ; 健康检查继承镜像内置 HEALTHCHECK(/health)
 #
-# 模型自备(一次性, 放 $HOME/models/bonsai2-27B):
-#   Ternary-Bonsai-2-27B-PQ2_0.gguf + Ternary-Bonsai-2-27B-mmproj-Q8_0.gguf
-#   下载命令见 Bonsai.Dockerfile 末尾注释
+# 家族 → 容器内挂载路径对照(脚本按此目录找模型):
+#   bonsai2  → /app/models/bonsai2-gguf/27B    (*-PQ2_0.gguf + *mmproj*.gguf)
+#   ternary  → /app/models/ternary-gguf/<size> (Q2_0 系)
+#   bonsai   → /app/models/gguf/<size>         (*-Q1_0.gguf)
 
 services:
   bonsai:
@@ -20,8 +20,15 @@ services:
     restart: unless-stopped
     ports:
       - "8080:8080"
+    environment:
+      - BONSAI_FAMILY=bonsai2        # 模型路由: 目录/文件匹配/采样/上下文分层
+      - BONSAI_MODEL=27B             # 27B|8B|4B|1.7B
+      - BONSAI_CTX=204800            # 200K(27B 专属); 老尺寸上限 65536; 删掉=按 RAM 自动分层
+      - BONSAI_MMPROJ_CPU=1          # 视觉投影器留内存(省 ~0.9GB 显存)
+    command: ["--no-kv-offload"]     # 200K FP16 KV(~12.5GB) 留 64G 内存, 权重全上 GPU(~9GB 显存)
+                                     # 跑小模型(KV 放得进显存)时删掉此行更快
     volumes:
-      # 模型外挂: 挂到脚本认的目录, 文件名需匹配 *-PQ2_0.gguf / *mmproj*.gguf
+      # 模型外挂: 宿主机两个 gguf (PQ2_0 主模型 + mmproj-Q8_0 视觉), 下载命令见 Bonsai.Dockerfile 末尾
       - $HOME/models/bonsai2-27B:/app/models/bonsai2-gguf/27B
     # GPU 直通, 等价 docker run --gpus all (libcuda 由 nvidia 容器运行时注入)
     deploy:
@@ -31,9 +38,6 @@ services:
             - driver: nvidia
               count: all
               capabilities: [gpu]
-    # 运行时调参(覆盖镜像内置默认, 按需取消注释):
-    # environment:
-    #   - BONSAI_CTX=32768      # 200K 深上下文 decode 慢时, 降上下文换速度
-    #   - BONSAI_KV4=1          # KV 4bit 量化(显存紧张时; 质量略降, 可配 make_kv_bias 校准)
-    #   - BONSAI_NGL=80         # 显存吃紧时部分层回 CPU(fork 不认 --no-kv-offload 时的退路)
-    #   - PORT=8081
+    # 逃生舱(跑任意路径 GGUF, 绕过家族目录约定): 挂载改 -v $HOME/models:/models, 且
+    #   environment 追加 BONSAI_GGUF=/models/xxx.gguf  BONSAI_MMPROJ=/models/xxx-mmproj.gguf
+    #   (FAMILY/MODEL/CTX 仍要按该模型配对, 采样与分层逻辑读取它们)
