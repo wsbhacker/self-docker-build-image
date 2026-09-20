@@ -1,0 +1,43 @@
+# Bonsai 家族通用镜像的部署档案: 本文件 = bonsai2 27B @ RTX5070 12GB + 64GB RAM, 200K 上下文
+# 换家族/尺寸: 改 environment 两行 + 挂载路径(对照表见下) + 按需调 CTX / command
+#
+# 用法(仓库根执行):
+#   docker compose -f prism-ml/bonsai-2-27b.compose.yaml pull && docker compose -f prism-ml/bonsai-2-27b.compose.yaml up -d
+#   docker compose -f prism-ml/bonsai-2-27b.compose.yaml logs -f    # 留意 --no-kv-offload 是否被 fork 接受
+#   访问 http://localhost:8080 ; 健康检查继承镜像内置 HEALTHCHECK(/health)
+#
+# 家族 → 容器内挂载路径对照(脚本按此目录找模型):
+#   bonsai2  → /app/models/bonsai2-gguf/27B    (*-PQ2_0.gguf + *mmproj*.gguf)
+#   ternary  → /app/models/ternary-gguf/<size> (Q2_0 系)
+#   bonsai   → /app/models/gguf/<size>         (*-Q1_0.gguf)
+
+services:
+  bonsai:
+    # CI(build-prismml-llama.yml) 产物; GHCR 引用必须小写(owner 实际 0xW5B)
+    # 若包为私有: docker login ghcr.io -u 0xW5B (PAT 需 read:packages)
+    image: ghcr.io/0xw5b/prismml-llama:latest
+    container_name: bonsai
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      - BONSAI_FAMILY=bonsai2        # 模型路由: 目录/文件匹配/采样/上下文分层
+      - BONSAI_MODEL=27B             # 27B|8B|4B|1.7B
+      - BONSAI_CTX=204800            # 200K(27B 专属); 老尺寸上限 65536; 删掉=按 RAM 自动分层
+      - BONSAI_MMPROJ_CPU=1          # 视觉投影器留内存(省 ~0.9GB 显存)
+    command: ["--no-kv-offload"]     # 200K FP16 KV(~12.5GB) 留 64G 内存, 权重全上 GPU(~9GB 显存)
+                                     # 跑小模型(KV 放得进显存)时删掉此行更快
+    volumes:
+      # 模型外挂: 宿主机两个 gguf (PQ2_0 主模型 + mmproj-Q8_0 视觉), 下载命令见同目录 prismml-llama.dockerfile 末尾
+      - $HOME/models/bonsai2-27B:/app/models/bonsai2-gguf/27B
+    # GPU 直通, 等价 docker run --gpus all (libcuda 由 nvidia 容器运行时注入)
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    # 逃生舱(跑任意路径 GGUF, 绕过家族目录约定): 挂载改 -v $HOME/models:/models, 且
+    #   environment 追加 BONSAI_GGUF=/models/xxx.gguf  BONSAI_MMPROJ=/models/xxx-mmproj.gguf
+    #   (FAMILY/MODEL/CTX 仍要按该模型配对, 采样与分层逻辑读取它们)
