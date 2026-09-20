@@ -1,4 +1,4 @@
-name: Build Bonsai
+name: Build PrismML llama
 
 on:
   workflow_dispatch:
@@ -10,8 +10,8 @@ on:
   push:
     branches: [main]
     paths:
-      - "PrismML-llama.dockerfile"
-      - ".github/workflows/build-bonsai.yml"
+      - "prismml-llama.dockerfile"
+      - ".github/workflows/build-prismml-llama.yml"
 
 jobs:
   build-and-push:
@@ -43,7 +43,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v6
         with:
-          images: ghcr.io/${{ github.repository_owner }}/bonsai
+          images: ghcr.io/${{ github.repository_owner }}/prismml-llama
           tags: |
             type=raw,value=${{ github.event.inputs.version_tag || 'latest' }}
 
@@ -51,7 +51,7 @@ jobs:
         uses: docker/build-push-action@v7
         with:
           context: .
-          file: ./PrismML-llama.dockerfile
+          file: ./prismml-llama.dockerfile
           platforms: linux/amd64
           push: true
           tags: ${{ steps.meta.outputs.tags }}

@@ -55,8 +55,8 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=180s \
 #       Ternary-Bonsai-2-27B-PQ2_0.gguf Ternary-Bonsai-2-27B-mmproj-Q8_0.gguf \
 #       --local-dir ~/models/bonsai2-27B
 #
-# 推荐用 Bonsai-2-27B.compose.yaml; 裸 docker run 等价形式:
+# 推荐用 bonsai-2-27b.compose.yaml; 裸 docker run 等价形式:
 #   docker run --gpus all -p 8080:8080 \
 #       -e BONSAI_CTX=204800 -e BONSAI_MMPROJ_CPU=1 \
 #       -v ~/models/bonsai2-27B:/app/models/bonsai2-gguf/27B \
-#       ghcr.io/0xw5b/bonsai:latest --no-kv-offload
+#       ghcr.io/0xw5b/prismml-llama:latest --no-kv-offload
