@@ -1,0 +1,41 @@
+# Bonsai 2 (Ternary-Bonsai-2-27B / Qwen3.8-27B 底座) llama-server 推理服务
+# 镜像配置(200K 上下文 + KV 留内存 + HOST 0.0.0.0)已烤进镜像, 见 Bonsai.Dockerfile
+#
+# 用法:
+#   docker compose -f Bonsai.compose.yml up -d --build   # 首次/更新
+#   docker compose -f Bonsai.compose.yml logs -f          # 看启动日志(留意 --no-kv-offload 是否被接受)
+#   访问 http://localhost:8080 ; 健康检查继承镜像内置 HEALTHCHECK(/health)
+#
+# 模型自备(一次性, 放 $HOME/models/bonsai2-27B):
+#   Ternary-Bonsai-2-27B-PQ2_0.gguf + Ternary-Bonsai-2-27B-mmproj-Q8_0.gguf
+#   下载命令见 Bonsai.Dockerfile 末尾注释
+
+services:
+  bonsai:
+    # 默认本地构建; CI(GHCR) 镜像可用后可改为:
+    #   image: ghcr.io/<owner>/bonsai:latest   并删除下方 build 段(pull 即用)
+    image: bonsai:latest
+    build:
+      context: .
+      dockerfile: Bonsai.Dockerfile
+    container_name: bonsai
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    volumes:
+      # 模型外挂: 挂到脚本认的目录, 文件名需匹配 *-PQ2_0.gguf / *mmproj*.gguf
+      - $HOME/models/bonsai2-27B:/app/models/bonsai2-gguf/27B
+    # GPU 直通, 等价 docker run --gpus all (libcuda 由 nvidia 容器运行时注入)
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    # 运行时调参(覆盖镜像内置默认, 按需取消注释):
+    # environment:
+    #   - BONSAI_CTX=32768      # 200K 深上下文 decode 慢时, 降上下文换速度
+    #   - BONSAI_KV4=1          # KV 4bit 量化(显存紧张时; 质量略降, 可配 make_kv_bias 校准)
+    #   - BONSAI_NGL=80         # 显存吃紧时部分层回 CPU(fork 不认 --no-kv-offload 时的退路)
+    #   - PORT=8081
