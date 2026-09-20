@@ -2,8 +2,9 @@
 # 镜像配置(200K 上下文 + KV 留内存 + HOST 0.0.0.0)已烤进镜像, 见 Bonsai.Dockerfile
 #
 # 用法:
-#   docker compose -f Bonsai.compose.yml up -d --build   # 首次/更新
-#   docker compose -f Bonsai.compose.yml logs -f          # 看启动日志(留意 --no-kv-offload 是否被接受)
+#   docker compose -f Bonsai.compose.yml pull       # 拉最新 CI 镜像
+#   docker compose -f Bonsai.compose.yml up -d      # 起服务
+#   docker compose -f Bonsai.compose.yml logs -f    # 看启动日志(留意 --no-kv-offload 是否被接受)
 #   访问 http://localhost:8080 ; 健康检查继承镜像内置 HEALTHCHECK(/health)
 #
 # 模型自备(一次性, 放 $HOME/models/bonsai2-27B):
@@ -12,12 +13,9 @@
 
 services:
   bonsai:
-    # 默认本地构建; CI(GHCR) 镜像可用后可改为:
-    #   image: ghcr.io/<owner>/bonsai:latest   并删除下方 build 段(pull 即用)
-    image: bonsai:latest
-    build:
-      context: .
-      dockerfile: Bonsai.Dockerfile
+    # CI(build-bonsai.yml) 产物; GHCR 引用必须小写(owner 实际 0xW5B)
+    # 若包为私有: docker login ghcr.io -u 0xW5B (PAT 需 read:packages)
+    image: ghcr.io/0xw5b/bonsai:latest
     container_name: bonsai
     restart: unless-stopped
     ports:
