@@ -20,6 +20,7 @@
 | `brave-search/` | `ghcr.io/{owner}/brave-search` | Brave Search MCP 服务器 (从上游仓库构建, 手动维护 Dockerfile) |
 | `trading-agents/` | `ghcr.io/{owner}/trading-agents` | TradingAgents 多智能体交易分析框架 (从上游仓库构建, 常驻交互式 CLI) |
 | `pg-ocs-sync-worker/` | `ghcr.io/{owner}/pg-ddl-sync` | PostgreSQL DDL 同步伴生服务 (Python) |
+| `beancount/` | `ghcr.io/{owner}/beancount` | Beancount v3 + Fava 纯文本记账 (CLI 与 Web 服务双用途, pip 精确 pin 配套升级) |
 
 ## CI/CD 工作流
 
@@ -46,6 +47,7 @@
 - `.github/workflows/build-brave-search.yml` - Brave Search MCP 服务器
 - `.github/workflows/build-trading-agents.yml` - TradingAgents 交易分析框架
 - `.github/workflows/build-pg-ddl-sync.yml` - PostgreSQL DDL 同步伴生服务
+- `.github/workflows/build-beancount.yml` - Beancount + Fava 记账镜像
 - `.github/workflows/check-fullstack-updates.yml` - Fullstack CLI 版本更新检测
 
 ### 工作流模式

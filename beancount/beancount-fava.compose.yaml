@@ -1,0 +1,21 @@
+# Fava 常驻服务部署示例（对应镜像 ghcr.io/{owner}/beancount）
+# 账本目录挂载到 /data；入口文件 mmm.beancount 已是镜像内置默认值
+services:
+  fava:
+    image: ghcr.io/0xw5b/beancount:latest
+    build: # 本地直建/改参数后重建用，纯拉镜像部署可删掉这三行
+      context: .
+      dockerfile: beancount-fava.dockerfile
+    container_name: fava
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    volumes:
+      - /path/to/ledger:/data # 改成你的账本仓库路径
+    environment:
+      LEDGER_FILE: /data/mmm.beancount # 与镜像默认一致，改名才需要设
+      # FAVA_EXTRA_ARGS: --read-only # fava 只读模式，禁用界面上的一切改动操作
+    # 只读加固（可选）：容器文件系统只读 + tmpfs 兜底临时文件
+    # read_only: true
+    # tmpfs:
+    #   - /tmp
