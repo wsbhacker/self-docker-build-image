@@ -58,6 +58,10 @@ jobs:
             type=raw,value=${{ inputs.version_tag }},enable=${{ github.event_name == 'workflow_dispatch' }}
             # 如果是 Push 触发，默认打上 latest 标签
             type=raw,value=latest,enable=${{ github.event_name == 'push' }}
+            # 日期滚动 tag（北京时间）：年/月粒度随当期最新构建滚动覆盖，分钟粒度近似唯一可作回溯锚点
+            type=raw,value={{date 'YYYY' tz='Asia/Shanghai'}}
+            type=raw,value={{date 'YYYY-MM' tz='Asia/Shanghai'}}
+            type=raw,value={{date 'YYYYMMDD-HHmm' tz='Asia/Shanghai'}}
 
       - name: Build and push (构建并推送)
         uses: docker/build-push-action@v7
