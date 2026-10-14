@@ -1,0 +1,74 @@
+name: Build webhook runner Image
+
+on:
+  # 1. 手动触发配置
+  workflow_dispatch:
+    inputs:
+      version_tag:
+        description: "设定镜像 Tag (例如: latest)"
+        required: false
+        default: "latest"
+        type: string
+
+  # 2. 修改触发配置
+  push:
+    branches:
+      - main
+    paths:
+      - "webhook-runner/**"
+      - ".github/workflows/build-webhook-runner.yml"
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository_owner }}/webhook-runner
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-24.04
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository (拉取代码)
+        uses: actions/checkout@v6
+
+      - name: Log in to the Container registry (登录镜像仓库)
+        uses: docker/login-action@v4
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }} # GitHub 自动生成的令牌，无需手动设置
+
+      - name: Set up QEMU (配置多架构支持环境)
+        uses: docker/setup-qemu-action@v4
+
+      - name: Set up Docker Buildx (配置构建工具)
+        uses: docker/setup-buildx-action@v4
+
+      - name: Extract metadata (准备镜像标签)
+        id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            # 如果是手动触发，使用输入的 version_tag
+            type=raw,value=${{ inputs.version_tag }},enable=${{ github.event_name == 'workflow_dispatch' }}
+            # 如果是 Push 触发，默认打上 latest 标签
+            type=raw,value=latest,enable=${{ github.event_name == 'push' }}
+            # 日期滚动 tag（北京时间）：年/月粒度随当期最新构建滚动覆盖，分钟粒度近似唯一可作回溯锚点
+            type=raw,value={{date 'YYYY' tz='Asia/Shanghai'}}
+            type=raw,value={{date 'YYYY-MM' tz='Asia/Shanghai'}}
+            type=raw,value={{date 'YYYYMMDD-HHmm' tz='Asia/Shanghai'}}
+
+      - name: Build and push (构建并推送)
+        uses: docker/build-push-action@v7
+        with:
+          context: ./webhook-runner # Dockerfile 所在的目录
+          file: ./webhook-runner/webhook-runner.dockerfile # Dockerfile 的具体路径
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          platforms: linux/amd64,linux/arm64 # VPS 是 ARM，amd64 留作本地调试
+          cache-from: type=gha # 使用 GitHub Actions 缓存加速构建
+          cache-to: type=gha,mode=max

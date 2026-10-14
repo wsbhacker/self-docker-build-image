@@ -1,0 +1,35 @@
+# webhook-runner 通用 webhook 接收/处理服务部署示例（对应镜像 ghcr.io/{owner}/webhook-runner）
+# 设计：镜像=工具箱零业务；hook 定义与处理脚本全部挂载，加用例=往 hooks.d 丢 json+往 scripts 丢 sh
+#   新增 hooks 文件需 docker restart 生效（hotreload 只热重载已加载文件的内容变化）
+# 用例工作目录按需加挂载（本例为 beancount 账本仓库，用例说明见本目录 README.md）
+services:
+  webhook-runner:
+    image: ghcr.io/0xw5b/webhook-runner:latest
+    build: # 本地直建/改参数后重建用，纯拉镜像部署可删掉这三行
+      context: .
+      dockerfile: webhook-runner.dockerfile
+    container_name: webhook-runner
+    restart: unless-stopped
+    environment:
+      # ↓ 用例专属变量按需增删（脚本从环境变量取）
+      LEDGER_SYNC_TOKEN: ${LEDGER_SYNC_TOKEN:-} # beancount 用例：fine-grained PAT，留空沿用 remote 内嵌 token
+      NTFY_TOPIC: ${NTFY_TOPIC:-} # 失败通知主题，留空=静默
+      NTFY_SERVER: ${NTFY_SERVER:-} # 可选，自托管 ntfy 地址（如 https://ntfy-saas.0xw5b.top），留空=公共服 ntfy.sh
+    volumes:
+      - /path/to/hooks.d:/etc/webhook/hooks.d:ro # 每用例一个 json（含 secret，600，勿进 git）
+      - /path/to/scripts:/hooks/scripts:ro # 每用例一个 sh，宿主机 chmod +x
+      - /path/to/ledger:/ledger # 用例工作目录：账本仓库，rw（pull 需写 .git）；fava 容器继续独立挂 :ro
+    networks:
+      - hacker_net # 与 nginx-gateway 同网络，map 里按容器名寻址
+    # 不发布任何端口：唯一入口是 nginx → webhook-runner:9000
+
+# nginx 侧配套（map 加一行，注意不要标 |1，GitHub 发不出 basic auth 凭据）：
+#   webhook    "webhook-runner:9000";
+# GitHub 侧配套（每个用例的仓库 Settings → Webhooks）：
+#   URL https://webhook-saas.0xw5b.top/hooks/<用例hook的id>   如 .../hooks/ledger-sync
+#   Content type application/json，secret 与对应 hooks json 一致，事件按需（push）
+# 挂载卷属主对齐：容器内 uid 1000（runner），宿主机挂载目录/仓库 owner 也应为 1000
+
+networks:
+  hacker_net:
+    external: true # 引用 nginx-gateway compose 里定义的网络

@@ -21,6 +21,7 @@
 | `trading-agents/` | `ghcr.io/{owner}/trading-agents` | TradingAgents 多智能体交易分析框架 (从上游仓库构建, 常驻交互式 CLI) |
 | `pg-ocs-sync-worker/` | `ghcr.io/{owner}/pg-ddl-sync` | PostgreSQL DDL 同步伴生服务 (Python) |
 | `beancount/` | `ghcr.io/{owner}/beancount` | Beancount v3 + Fava 纯文本记账 (CLI 与 Web 服务双用途, pip 精确 pin 配套升级) |
+| `webhook-runner/` | `ghcr.io/{owner}/webhook-runner` | 通用 webhook 接收/处理服务 (adnanh/webhook + git + curl + python3 工具箱, 零业务绑定)；hooks.d/ 与 scripts/ 为挂载用例内容源 (现有 ledger-sync 账本同步) |
 
 ## CI/CD 工作流
 
@@ -48,6 +49,7 @@
 - `.github/workflows/build-trading-agents.yml` - TradingAgents 交易分析框架
 - `.github/workflows/build-pg-ddl-sync.yml` - PostgreSQL DDL 同步伴生服务
 - `.github/workflows/build-beancount.yml` - Beancount + Fava 记账镜像
+- `.github/workflows/build-webhook-runner.yml` - 通用 webhook 接收/处理服务镜像
 - `.github/workflows/check-fullstack-updates.yml` - Fullstack CLI 版本更新检测
 
 ### 工作流模式
