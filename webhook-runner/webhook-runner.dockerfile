@@ -14,7 +14,8 @@ RUN apt-get update \
     && apt-get clean && rm -rf /var/lib/apt/lists/* \
     && tar -xzf /tmp/webhook.tar.gz -C /usr/local/bin --strip-components=1 \
     && rm /tmp/webhook.tar.gz \
-    && useradd --create-home --uid 1000 runner
+    && useradd --create-home --uid 1000 runner \
+    && chmod 777 /home/runner
 
 COPY --chmod=755 entrypoint.sh /usr/local/bin/entrypoint.sh
 
@@ -25,6 +26,9 @@ USER runner
 # 处理脚本目录（execute-command 指向 /hooks/scripts/ 下的挂载脚本）
 # 两者及用例工作目录（如账本仓库）均由 compose 挂载
 ENV HOOKS_DIR=/etc/webhook/hooks.d \
-    SCRIPTS_DIR=/hooks/scripts
+    SCRIPTS_DIR=/hooks/scripts \
+    HOME=/home/runner
+
+
 
 ENTRYPOINT ["entrypoint.sh"]
