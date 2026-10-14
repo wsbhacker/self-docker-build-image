@@ -2,6 +2,9 @@
   {
     "id": "wecom-notify",
     "execute-command": "/hooks/scripts/wecom-notify.sh",
+    "pass-environment-to-command": [
+      { "source": "string", "envname": "WECOM_APP_KEY", "name": "wecom-notify" }
+    ],
     "include-command-output-in-response": false,
     "pass-arguments-to-command": [
       { "source": "payload", "name": "pusher.name" },

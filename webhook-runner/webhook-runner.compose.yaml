@@ -19,6 +19,10 @@ services:
       WECOM_CORP_SECRET: ${WECOM_CORP_SECRET:-} # wecom-notify 用例：自建应用 Secret（凭据，放 .env 勿进 git）
       WECOM_AGENT_ID: ${WECOM_AGENT_ID:-} # wecom-notify 用例：自建应用 AgentId
       WECOM_TO_USER: ${WECOM_TO_USER:-@all} # wecom-notify 用例：接收人 userid（多个用|分隔），留空=@all 可见范围全员
+      # wecom 一机多应用约定：hook json 传 WECOM_APP_KEY=<hook id>，所有 WECOM_* 变量先取
+      #   <id大写下划线>_ 同名前缀变量、空则回落上面默认——例：id=wecom-notify-ci 的 hook 用
+      #   WECOM_NOTIFY_CI_WECOM_CORP_ID/_CORP_SECRET/_AGENT_ID（可选 _TO_USER），按需在 .env 加并在
+      #   此增行；第二个应用复用同一脚本，只多拷一份 hook json
     volumes:
       - /path/to/hooks.d:/etc/webhook/hooks.d:ro # 每用例一个 json（含 secret，600，勿进 git）
       - /path/to/scripts:/hooks/scripts:ro # 每用例一个 sh，宿主机 chmod +x

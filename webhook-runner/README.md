@@ -27,8 +27,9 @@
 ## 现有用例：wecom-notify（GitHub push → 企业微信应用消息）
 
 - `hooks.d/wecom-notify.json`：HMAC 验签 + 仅 `refs/heads/main` 的 push（要全分支通知就删掉 ref 那条 value 规则）；`pass-arguments-to-command` 从 payload 取 pusher/仓库全名/ref/commits 数组/最新提交信息/compare 链接传给脚本——注意引擎不支持 gjson 的 `commits.#` 计数（实测 2.8.3 传空串），故传整个数组由脚本数
-- `scripts/wecom-notify.sh`：拼文本消息 → gettoken 取 access_token（缓存 `/tmp/wecom-notify.token` 复用、剩 300s 提前换新，遇 40014/42001 失效竞态自动重取重发一次）→ POST 应用消息接口 message/send；curl 报错或返回体 `errcode != 0` 都按失败处理
+- `scripts/wecom-notify.sh`：拼文本消息 → gettoken 取 access_token（缓存 `/tmp/<前缀>.token` 复用、剩 300s 提前换新，遇 40014/42001 失效竞态自动重取重发一次）→ POST 应用消息接口 message/send；curl 报错或返回体 `errcode != 0` 都按失败处理
 - 走的是**自建应用**消息接口（发到成员的企业微信，手机收推送），不是群机器人（机器人只要一个 URL key，但只能发群、限 20 条/分钟）
+- **一机多应用约定**：hook json 经 `pass-environment-to-command` 传 `WECOM_APP_KEY=<hook id>`（前缀开关，本身不参与回落），所有 `WECOM_*` 配置变量逐个先取 `<id转大写下划线>_` 同名前缀变量、空则回落不带前缀的默认值——如 id `wecom-notify-ci` 用 `WECOM_NOTIFY_CI_WECOM_CORP_ID/_CORP_SECRET/_AGENT_ID`（可选 `_WECOM_TO_USER`）。加第二个应用 = 拷一份 hook json 改 id/secret/APP_KEY + `.env` 加前缀三件套，脚本复用不用拷；access_token 缓存按前缀隔离（token 跟 secret 走，多应用共享缓存文件会 40014 互踩）
 - 环境变量：`WECOM_CORP_ID` / `WECOM_CORP_SECRET` / `WECOM_AGENT_ID`（**必填**，管理后台-应用管理-自建应用；Secret 是凭据放 VPS 侧 `.env` 勿进 git，未配置则触发即失败）；`WECOM_TO_USER`（可选，接收人 userid 多个用 `|` 分隔，默认 `@all`）；`NTFY_TOPIC`/`NTFY_SERVER`（可选，与 beancount-sync 共用做失败兜底——脚本失败时 delivery 不标红，ntfy 是唯一推送告警）
 - 接收人必须在自建应用的**可见范围**内，否则 @all 发不到人（管理后台-应用管理-自建应用-可见范围）
 - GitHub 仓库 Settings → Webhooks：`https://webhook-saas.0xw5b.top/hooks/wecom-notify`，secret 与 json 一致，仅订阅 push
