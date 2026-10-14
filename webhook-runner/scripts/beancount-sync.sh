@@ -1,7 +1,7 @@
 #!/bin/sh
-# ledger-sync：beancount 账本同步用例（跑在通用 webhook-runner 容器内，uid 1000）
-#   由 hooks.d/ledger-sync.json 触发：git pull --ff-only → bean-check（容器内有则跑）
-#   任一失败发 ntfy 通知并退出非 0（GitHub delivery 标红）
+# beancount-sync：beancount 账本同步用例（跑在通用 webhook-runner 容器内，uid 1000）
+#   由 hooks.d/beancount-sync.json 触发：git pull --ff-only → bean-check（容器内有则跑）
+#   任一失败发 ntfy 通知并退出非 0（实测 2.8.3 对命令非 0 仍回 200，delivery 不标红——真信号是 docker logs + ntfy）
 # 部署：拷到 VPS 的 scripts 挂载目录并 chmod +x；hooks json 拷到 hooks.d（改 secret 后 600）
 # 幂等：重复触发只是多 pull 一次空更新；flock 防连续 push 时两个 pull 并发写 .git
 set -eu
@@ -18,7 +18,7 @@ notify() { # notify "标题"
     curl -fsS --max-time 10 -H "Title: $1" -d "" "${NTFY_SERVER:-https://ntfy.sh}/${NTFY_TOPIC}" >/dev/null || true
 }
 
-exec 9>/tmp/ledger-sync.lock
+exec 9>/tmp/beancount-sync.lock
 flock 9
 
 # token 注入二选一：环境变量 LEDGER_SYNC_TOKEN（remote 为干净 URL 时）；
@@ -30,7 +30,7 @@ if [ -n "${LEDGER_SYNC_TOKEN:-}" ]; then
 fi
 
 if ! git $PULL_AUTH -C "$LEDGER_DIR" pull --ff-only; then
-    notify "ledger-sync: git pull 失败"
+    notify "beancount-sync: git pull 失败"
     exit 1
 fi
 
@@ -38,7 +38,7 @@ fi
 # 需要校验时给 runner 叠一层装 beancount 的变体镜像即可（本脚本无需改）
 if command -v bean-check >/dev/null 2>&1; then
     if ! bean-check "$LEDGER_FILE"; then
-        notify "ledger-sync: bean-check 未通过（账本语法错误）"
+        notify "beancount-sync: bean-check 未通过（账本语法错误）"
         exit 1
     fi
 fi

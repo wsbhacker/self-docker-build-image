@@ -15,6 +15,10 @@ services:
       LEDGER_SYNC_TOKEN: ${LEDGER_SYNC_TOKEN:-} # beancount 用例：fine-grained PAT，留空沿用 remote 内嵌 token
       NTFY_TOPIC: ${NTFY_TOPIC:-} # 失败通知主题，留空=静默
       NTFY_SERVER: ${NTFY_SERVER:-} # 可选，自托管 ntfy 地址（如 https://ntfy-saas.0xw5b.top），留空=公共服 ntfy.sh
+      WECOM_CORP_ID: ${WECOM_CORP_ID:-} # wecom-notify 用例：企业ID（管理后台-我的企业-企业信息）
+      WECOM_CORP_SECRET: ${WECOM_CORP_SECRET:-} # wecom-notify 用例：自建应用 Secret（凭据，放 .env 勿进 git）
+      WECOM_AGENT_ID: ${WECOM_AGENT_ID:-} # wecom-notify 用例：自建应用 AgentId
+      WECOM_TO_USER: ${WECOM_TO_USER:-@all} # wecom-notify 用例：接收人 userid（多个用|分隔），留空=@all 可见范围全员
     volumes:
       - /path/to/hooks.d:/etc/webhook/hooks.d:ro # 每用例一个 json（含 secret，600，勿进 git）
       - /path/to/scripts:/hooks/scripts:ro # 每用例一个 sh，宿主机 chmod +x
@@ -26,7 +30,7 @@ services:
 # nginx 侧配套（map 加一行，注意不要标 |1，GitHub 发不出 basic auth 凭据）：
 #   webhook    "webhook-runner:9000";
 # GitHub 侧配套（每个用例的仓库 Settings → Webhooks）：
-#   URL https://webhook-saas.0xw5b.top/hooks/<用例hook的id>   如 .../hooks/ledger-sync
+#   URL https://webhook-saas.0xw5b.top/hooks/<用例hook的id>   如 .../hooks/beancount-sync
 #   Content type application/json，secret 与对应 hooks json 一致，事件按需（push）
 # 挂载卷属主对齐：容器内 uid 1000（runner），宿主机挂载目录/仓库 owner 也应为 1000
 

@@ -1,7 +1,7 @@
 [
   {
-    "id": "ledger-sync",
-    "execute-command": "/hooks/scripts/ledger-sync.sh",
+    "id": "beancount-sync",
+    "execute-command": "/hooks/scripts/beancount-sync.sh",
     "include-command-output-in-response": false,
     "trigger-rule": {
       "and": [

@@ -16,16 +16,26 @@
 4. `docker restart webhook-runner`（`-hotreload` 只热重载已加载文件的内容变化，如换 secret；**新增文件必须重启**）
 5. GitHub 仓库 Settings → Webhooks：`https://webhook-saas.0xw5b.top/hooks/xxx`，secret 与 json 一致，按需订阅事件
 
-## 现有用例：ledger-sync（beancount 账本同步）
+## 现有用例：beancount-sync（beancount 账本同步）
 
-- `hooks.d/ledger-sync.json`：HMAC 验签（`payload-hmac-sha256`）+ 仅 `refs/heads/main` 的 push
-- `scripts/ledger-sync.sh`：flock 防并发 → `git pull --ff-only` → 可选 `bean-check`（探测式，runner 不预装 beancount，装了就跑）→ 失败发 ntfy
+- `hooks.d/beancount-sync.json`：HMAC 验签（`payload-hmac-sha256`）+ 仅 `refs/heads/main` 的 push
+- `scripts/beancount-sync.sh`：flock 防并发 → `git pull --ff-only` → 可选 `bean-check`（探测式，runner 不预装 beancount，装了就跑）→ 失败发 ntfy
 - 环境变量：`LEDGER_SYNC_TOKEN`（可选，fine-grained PAT：仅账本仓库 + Contents:Read-only + 90 天过期；留空沿用仓库 remote 内嵌 token）、`NTFY_TOPIC`（可选，失败推送主题）、`NTFY_SERVER`（可选，自托管 ntfy 地址，留空用公共服 ntfy.sh；注意 iOS 对自托管只能轮询推送有延迟，Android 即时）
 - 工作目录：账本仓库挂 `/ledger`（rw，pull 需写 `.git`）；fava 容器继续独立挂 `:ro` 互不影响
+- GitHub 仓库 Settings → Webhooks：`https://webhook-saas.0xw5b.top/hooks/beancount-sync`，secret 与 json 一致，仅订阅 push
+
+## 现有用例：wecom-notify（GitHub push → 企业微信应用消息）
+
+- `hooks.d/wecom-notify.json`：HMAC 验签 + 仅 `refs/heads/main` 的 push（要全分支通知就删掉 ref 那条 value 规则）；`pass-arguments-to-command` 从 payload 取 pusher/仓库全名/ref/commits 数组/最新提交信息/compare 链接传给脚本——注意引擎不支持 gjson 的 `commits.#` 计数（实测 2.8.3 传空串），故传整个数组由脚本数
+- `scripts/wecom-notify.sh`：拼文本消息 → gettoken 取 access_token（缓存 `/tmp/wecom-notify.token` 复用、剩 300s 提前换新，遇 40014/42001 失效竞态自动重取重发一次）→ POST 应用消息接口 message/send；curl 报错或返回体 `errcode != 0` 都按失败处理
+- 走的是**自建应用**消息接口（发到成员的企业微信，手机收推送），不是群机器人（机器人只要一个 URL key，但只能发群、限 20 条/分钟）
+- 环境变量：`WECOM_CORP_ID` / `WECOM_CORP_SECRET` / `WECOM_AGENT_ID`（**必填**，管理后台-应用管理-自建应用；Secret 是凭据放 VPS 侧 `.env` 勿进 git，未配置则触发即失败）；`WECOM_TO_USER`（可选，接收人 userid 多个用 `|` 分隔，默认 `@all`）；`NTFY_TOPIC`/`NTFY_SERVER`（可选，与 beancount-sync 共用做失败兜底——脚本失败时 delivery 不标红，ntfy 是唯一推送告警）
+- 接收人必须在自建应用的**可见范围**内，否则 @all 发不到人（管理后台-应用管理-自建应用-可见范围）
+- GitHub 仓库 Settings → Webhooks：`https://webhook-saas.0xw5b.top/hooks/wecom-notify`，secret 与 json 一致，仅订阅 push
 
 ## 部署注意
 
 - hooks json 含 secret：本仓库内是占位符，拷上 VPS 后改真实 secret、权限 600，真实件勿进任何 git
 - 容器 uid 1000（runner）：宿主机挂载目录/仓库 owner 应为 1000（`ls -n` 确认），否则 git pull 写入失败
-- 排障速查：HTTP 500 = HMAC 签名错或脚本退出非 0（`docker logs webhook-runner` 分辨两者）；200 但日志 "not satisfied" = 规则不匹配（如非 main 分支，无害，命令未执行）
+- 排障速查：HTTP 500 = HMAC 签名错/规则评估错；**脚本退出非 0 时仍是 200**（实测 2.8.3，GitHub delivery 绿勾），真失败信号是 `docker logs webhook-runner` 里的 "error occurred" 行（配了 NTFY_TOPIC 才有推送兜底）；200 但日志 "not satisfied" = 规则不匹配（如非 main 分支，无害，命令未执行）
 - 测试投递须带 `Content-Type: application/json`，否则 payload 不解析、分支规则永远不满足（GitHub 实发总带）
