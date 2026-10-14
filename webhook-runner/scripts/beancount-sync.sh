@@ -20,7 +20,7 @@ notify() { # notify "标题"
 
 exec 9>/tmp/beancount-sync.lock
 flock 9
-cd LEDGER_DIR
+cd "$LEDGER_DIR"
 
 # token 注入二选一：环境变量 LEDGER_SYNC_TOKEN（remote 为干净 URL 时）；
 # 留空则沿用仓库 remote URL 里已内嵌的 token（git clone https://token@... 的现状）
