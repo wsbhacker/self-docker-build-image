@@ -24,12 +24,12 @@ flock 9
 # token 注入二选一：环境变量 LEDGER_SYNC_TOKEN（remote 为干净 URL 时）；
 # 留空则沿用仓库 remote URL 里已内嵌的 token（git clone https://token@... 的现状）
 # shellcheck disable=SC2086  # 需按空白拆分为多个参数
-PULL_AUTH=""
-if [ -n "${LEDGER_SYNC_TOKEN:-}" ]; then
-    PULL_AUTH="-c http.extraheader=Authorization: Bearer ${LEDGER_SYNC_TOKEN}"
-fi
+#PULL_AUTH=""
+#if [ -n "${LEDGER_SYNC_TOKEN:-}" ]; then
+#    PULL_AUTH="-c http.extraheader=Authorization: Bearer ${LEDGER_SYNC_TOKEN}"
+#fi
 
-if ! git $PULL_AUTH -C "$LEDGER_DIR" pull --ff-only; then
+if ! git pull --ff-only; then
     notify "beancount-sync: git pull 失败"
     exit 1
 fi
