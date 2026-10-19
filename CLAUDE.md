@@ -87,6 +87,20 @@ jobs:
           cache-to: type=gha,mode=max
 ```
 
+## 镜像 Tag 规则
+
+如无特殊说明，构建的 Docker 镜像需要包含以下基于构建时间的时间 tag（示例：构建于 2026-10-12 14:23）：
+
+- 年 tag：`2026`
+- 月 tag：`202610`
+- 精确到分的 tag：`20261012-1423`
+
+新建或修改构建工作流时需按此规则生成并推送 tag。
+
+## GitHub Actions 版本规范
+
+GitHub Actions 使用明确的版本标签，不使用 `ubuntu-latest` 这类模糊标签（latest 会随平台更新漂移，导致构建环境不可复现）。例如 `runs-on: ubuntu-24.04`，不写 `runs-on: ubuntu-latest`。
+
 ## 架构模式
 
 ### 多架构构建
