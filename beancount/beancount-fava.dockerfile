@@ -13,6 +13,11 @@ RUN pip install --no-cache-dir \
         "beancount==${BEANCOUNT_VERSION}" \
         "fava==${FAVA_VERSION}"
 
+# 插件清单外置：加插件只改 requirements-plugins.txt 后 push，CI 自动重建，本文件不再动
+# COPY 的缓存键是文件内容校验和——清单一变此层即失效重装，不会误用旧清单；置于基座包之后，改插件不碰上层缓存
+COPY requirements-plugins.txt /tmp/requirements-plugins.txt
+RUN pip install --no-cache-dir -r /tmp/requirements-plugins.txt
+
 RUN useradd --create-home --uid 1000 bean \
     && mkdir -p /data \
     && chown bean:bean /data

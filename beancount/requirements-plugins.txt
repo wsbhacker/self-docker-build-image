@@ -1,0 +1,10 @@
+# beancount 插件清单 —— 加插件只需在此追加一行并 push（beancount/** 变更自动触发 CI 重建，Dockerfile 不用动）
+# 格式即 pip requirements，支持精确版本/范围/extras/git 源；本文件只有注释时 pip 安装为空操作，构建照常通过
+#   some-plugin==1.2.3
+#   some-plugin>=1.0,<2.0
+#   some-plugin[extra]
+#   git+https://github.com/<user>/<plugin-repo>.git@v1.2.3
+# beancount 插件装完在账本里加 plugin "模块名" 激活；fava 扩展改用 custom "fava-extension" 指令
+
+# fava 投资组合收益扩展：TWR/年化 IRR/波动率/最大回撤，自带中文界面，beangrow 已内嵌
+fava-portfolio-returns==2.7.0

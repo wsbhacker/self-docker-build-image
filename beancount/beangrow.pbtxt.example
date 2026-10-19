@@ -1,0 +1,37 @@
+# beangrow 配置示例 —— fava-portfolio-returns 靠它识别投资与现金流
+# 用法：拷到账本目录（compose 挂载到 /data 的目录，与 mmm.beancount 同级），命名 beangrow.pbtxt，
+#       账户名替换成账本里的真实账户；本文件只是模板，不参与镜像构建
+# 规则：账户名必须与账本逐字符一致（大小写、冒号层级）；currency 是账本里基金份额的 commodity——
+#       纯数字基金代码不能直接当币种（会被解析成数字），账本惯例加字母前缀（F510300 / SH510300）
+# 前提：基金净值必须以 Price 指令进账本，没有价格出不了收益（插件 Missing Prices 页可查缺口）
+
+investments {
+  # 场内 ETF：买卖两腿 = 券商资金账户 <-> ETF 持仓账户，现金分红进 Income
+  investment {
+    currency: "F510300"
+    asset_account: "Assets:Broker:SSE:510300"
+    cash_accounts: "Assets:Broker:SSE:Cash"
+    dividend_accounts: "Income:Broker:SSE:510300:Dividend"
+  }
+
+  # 场外基金：申购赎回走银行卡/支付宝现金账户（cash_accounts 可写多行挂多个资金来源）；
+  # 红利再投资的交易两腿都在投资内部，不会被计成现金流，无需额外配置
+  investment {
+    currency: "F001102"
+    asset_account: "Assets:Alipay:Fund:001102"
+    cash_accounts: "Assets:Bank:CMB:Cash"
+    cash_accounts: "Assets:Alipay:Cash"
+  }
+}
+
+groups {
+  # 组合级分组，name 显示在界面投资选择器里；investment 支持通配符（* 和 ?）
+  group {
+    name: "全部投资"
+    investment: "Assets:*"
+  }
+  group {
+    name: "场内ETF"
+    investment: "Assets:Broker:SSE:5*"
+  }
+}
