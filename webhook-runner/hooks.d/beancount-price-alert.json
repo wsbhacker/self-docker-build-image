@@ -1,7 +1,7 @@
 [
   {
     "id": "beancount-price-alert",
-    "execute-command": "/hooks/scripts/wecom-notify.sh",
+    "execute-command": "/hooks/scripts/wecom-send.sh",
     "pass-environment-to-command": [
       {
         "source": "string",
@@ -11,8 +11,8 @@
     ],
     "include-command-output-in-response": false,
     "pass-arguments-to-command": [
-      { "source": "payload", "name": "title" },
-      { "source": "payload", "name": "message" }
+      { "source": "payload", "name": "text" },
+      { "source": "payload", "name": "title" }
     ],
     "trigger-rule": {
       "and": [
