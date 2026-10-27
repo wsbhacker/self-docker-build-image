@@ -1,0 +1,29 @@
+[
+  {
+    "id": "beancount-price-alert",
+    "execute-command": "/hooks/scripts/wecom-notify.sh",
+    "pass-environment-to-command": [
+      {
+        "source": "string",
+        "envname": "WECOM_APP_KEY",
+        "name": "BC_PRICE_ALERT"
+      }
+    ],
+    "include-command-output-in-response": false,
+    "pass-arguments-to-command": [
+      { "source": "payload", "name": "title" },
+      { "source": "payload", "name": "message" }
+    ],
+    "trigger-rule": {
+      "and": [
+        {
+          "match": {
+            "type": "value",
+            "secret": "CHANGE_ME_与GitHub仓库Webhook设置里相同的secret",
+            "parameter": { "source": "header", "name": "x-token" }
+          }
+        }
+      ]
+    }
+  }
+]
