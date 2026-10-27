@@ -1,0 +1,18 @@
+[
+  {
+    "id": "wecom-send",
+    "execute-command": "/hooks/scripts/wecom-send.sh",
+    "include-command-output-in-response": false,
+    "pass-arguments-to-command": [
+      { "source": "payload", "name": "content" },
+      { "source": "payload", "name": "title" }
+    ],
+    "trigger-rule": {
+      "match": {
+        "type": "payload-hmac-sha256",
+        "secret": "CHANGE_ME_调用方用同一secret对请求体做HMAC-SHA256并放X-Hub-Signature-256头",
+        "parameter": { "source": "header", "name": "X-Hub-Signature-256" }
+      }
+    }
+  }
+]

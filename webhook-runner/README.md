@@ -34,6 +34,14 @@
 - 接收人必须在自建应用的**可见范围**内，否则 @all 发不到人（管理后台-应用管理-自建应用-可见范围）
 - GitHub 仓库 Settings → Webhooks：`https://webhook-saas.0xw5b.top/hooks/wecom-notify`，secret 与 json 一致，仅订阅 push
 
+## 现有用例：wecom-send（通用企微发送器，任意来源 → 企业微信应用消息）
+
+- 与 wecom-notify 的分工：**不做任何消息拼凑，只接受规范信息并发送**——任何系统 `curl -d '{"title":"构建失败","content":"..."}' https://webhook-saas.0xw5b.top/hooks/wecom-send` 即可发企微消息；GitHub push 那种拼消息的活留给 wecom-notify
+- `scripts/wecom-send.sh` 接口约定（与 hook json 的 `pass-arguments-to-command` 数组顺序一一对应）：`$1`=content（必填，消息全文）、`$2`=title（可选，拼正文开头【title】，兼作 ntfy 兜底标题）、`$3`=to_user（可选，覆盖默认接收人）
+- **字段名适配在 json 层完成**：`pass-arguments-to-command` 里的 `name` 只是从 payload 取值的 gjson 路径，与脚本参数无名字绑定——第三方传 `title+text`/`subject+body` 都行，json 里 `name` 写第三方字段名、顺序对准 `$1/$2/$3` 序位即完成适配，脚本零改动
+- `hooks.d/wecom-send.json` 是自配模板：门禁（trigger-rule）按来源自由定，模板带 HMAC 验签示例（内网信任也可删掉，但注意=任何能打到 9000 端口者都能借你的企微发消息）；要多应用隔离就照 wecom-notify.json 抄 `pass-environment-to-command` 传 `WECOM_APP_KEY`
+- 环境变量与一机多应用、token 缓存、40014 重发、ntfy 失败兜底均与 wecom-notify 同款（两脚本这段逻辑是复制的，改一处请同步另一处）
+
 ## 部署注意
 
 - hooks json 含 secret：本仓库内是占位符，拷上 VPS 后改真实 secret、权限 600，真实件勿进任何 git
